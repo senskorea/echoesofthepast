@@ -1,0 +1,34 @@
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+    "title": "Calea Victoriei, Bucharest, 1912",
+    "description": "A stunning view of Calea Victoriei, one of Bucharest's most important avenues, as it appeared before the First World War. The street was a hub of fashion, commerce, and high society, showcasing the city's ambition to become the 'Little Paris of the East'. The architecture reflects a blend of Neoclassical and Art Nouveau styles.",
+    "image_url": "https://i.imgur.com/pcWjvRr.jpeg",
+    "latitude": 44.4352,
+    "longitude": 26.0986
+  },
+  {
+    "id": "b2c3d4e5-f6a7-8901-2345-67890abcdef1",
+    "title": "The Eiffel Tower, Paris, c. 1900",
+    "description": "An early depiction of the Eiffel Tower, captured just over a decade after its completion for the 1889 Exposition Universelle. Initially controversial, it soon became a global icon of French engineering and modernism. This postcard captures a horse-drawn carriage on the Champ de Mars, a poignant contrast between the old world and the new.",
+    "image_url": "https://i.imgur.com/2qCyXLE.jpeg",
+    "latitude": 48.8584,
+    "longitude": 2.2945
+  },
+  {
+    "id": "c3d4e5f6-a7b8-9012-3456-7890abcdef12",
+    "title": "Constanța Casino on the Black Sea",
+    "description": "The iconic Art Nouveau casino in Constanța, Romania, pictured in its glamorous heyday. Completed in 1910, it was a luxurious destination for European elite, overlooking the Black Sea. The building's ornate design and dramatic seaside location made it a symbol of Romanian elegance and a popular subject for postcards.",
+    "image_url": "https://i.imgur.com/9UIYNbw.jpeg",
+    "latitude": 44.171,
+    "longitude": 28.663
+  },
+  {
+    "id": "d4e5f6a7-b8c9-0123-4567-890abcdef123",
+    "title": "Montmartre Street Scene, Paris",
+    "description": "A lively street in Montmartre, the famous Parisian artists' quarter. Known for its bohemian atmosphere, the district attracted painters, writers, and thinkers. This postcard captures the daily life and unique charm of its cobblestone streets long before it became a major tourist hub, showcasing its authentic, creative spirit.",
+    "image_url": "https://i.imgur.com/rB6ozf3.jpeg",
+    "latitude": 48.8867,
+    "longitude": 2.3431
+  }
+]

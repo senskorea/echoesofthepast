@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* GeoStories Design System - Vintage Elegance meets Modern Storytelling */
+
+@layer base {
+  :root {
+    /* Core Brand Colors - Warm, nostalgic palette */
+    --background: 40 100% 98%; /* Warm Off-White #FFFBF5 */
+    --foreground: 205 33% 34%; /* Dusk Blue #3A5A73 */
+
+    --primary: 205 33% 34%; /* Dusk Blue - primary brand color */
+    --primary-foreground: 40 100% 98%;
+
+    --accent: 40 82% 73%; /* Golden Amber #F4C481 */
+    --accent-foreground: 205 33% 34%;
+
+    --secondary: 40 45% 92%; /* Soft cream for subtle elements */
+    --secondary-foreground: 205 33% 34%;
+
+    --muted: 40 30% 88%;
+    --muted-foreground: 205 20% 50%;
+
+    /* UI Elements */
+    --card: 0 0% 100%;
+    --card-foreground: 205 33% 34%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 205 33% 34%;
+
+    --border: 40 40% 90%;
+    --input: 40 40% 90%;
+    --ring: 40 82% 73%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --radius: 0.75rem;
+
+    /* Custom design tokens */
+    --golden-glow: 40 82% 73%;
+    --vintage-shadow: 205 33% 34%;
+  }
+
+  .dark {
+    --background: 205 40% 12%;
+    --foreground: 40 100% 98%;
+
+    --primary: 40 82% 73%;
+    --primary-foreground: 205 33% 34%;
+
+    --accent: 40 82% 73%;
+    --accent-foreground: 205 40% 12%;
+
+    --secondary: 205 30% 20%;
+    --secondary-foreground: 40 100% 98%;
+
+    --muted: 205 25% 18%;
+    --muted-foreground: 40 40% 70%;
+
+    --card: 205 35% 15%;
+    --card-foreground: 40 100% 98%;
+
+    --popover: 205 35% 15%;
+    --popover-foreground: 40 100% 98%;
+
+    --border: 205 25% 25%;
+    --input: 205 25% 25%;
+    --ring: 40 82% 73%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Lato', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Lora', serif;
+  }
+}
+
+@layer components {
+  .vintage-card {
+    @apply bg-card rounded-xl shadow-lg border border-border/50;
+    box-shadow: 0 4px 20px rgba(58, 90, 115, 0.08), 0 0 40px rgba(244, 196, 129, 0.05);
+  }
+
+  .golden-glow {
+    box-shadow: 0 0 30px rgba(244, 196, 129, 0.3);
+  }
+
+  .story-transition {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
