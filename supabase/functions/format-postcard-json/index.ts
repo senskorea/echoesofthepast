@@ -5,98 +5,106 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const SCHEMA = `{
+  "id": "unique-id-string",
+  "title": "Postcard title including location and era",
+  "description": "Detailed description combining all available context",
+  "imageUrl": "URL to the image",
+  "latitude": 48.8584,
+  "longitude": 2.2945
+}`;
+
+function buildPrompt(json: string) {
+  return `You are a JSON transformation assistant for a historical postcard mapping platform.
+
+Convert any postcard-related JSON into this exact format:
+${SCHEMA}
+
+Rules:
+1. Extract or generate a unique ID (use postcard_id if available, otherwise generate one)
+2. Extract the title (include location and era if visible)
+3. Combine all descriptive fields into one description
+4. Extract imageUrl (use image_url, imageUrl, or any image field)
+5. Extract latitude and longitude as numbers
+6. Return ONLY a valid JSON array, no markdown, no prose
+7. If multiple postcards exist in input, return all of them
+8. If any field is missing, use reasonable defaults or leave blank
+
+Input JSON:
+${json}`;
+}
+
+// ── OpenAI ────────────────────────────────────────────────────
+async function formatWithOpenAI(json: string, apiKey: string): Promise<string> {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: buildPrompt(json) }],
+    }),
+  });
+  if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+// ── Gemini ────────────────────────────────────────────────────
+async function formatWithGemini(json: string, apiKey: string): Promise<string> {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: buildPrompt(json) }] }],
+        generationConfig: { maxOutputTokens: 2000, temperature: 0.1 },
+      }),
+    }
+  );
+  if (!response.ok) throw new Error(`Gemini error: ${response.status}`);
+  const data = await response.json();
+  return data.candidates[0].content.parts[0].text;
+}
+
+function cleanJson(raw: string): unknown {
+  let clean = raw.trim();
+  if (clean.startsWith("```json")) clean = clean.replace(/```json\n?/g, "").replace(/```\n?$/g, "");
+  else if (clean.startsWith("```")) clean = clean.replace(/```\n?/g, "");
+  return JSON.parse(clean);
+}
+
+// ── Handler ───────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { json } = await req.json();
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
+    const { json, provider = "openai", apiKey: clientKey } = await req.json();
+    const openaiSecret = Deno.env.get("OPENAI_API_KEY");
+    const geminiSecret = Deno.env.get("GEMINI_API_KEY");
 
-    const systemPrompt = `You are a JSON transformation assistant. Your task is to convert any postcard-related JSON data into the following simple format:
+    let rawResult: string;
 
-{
-  "id": "unique-id-string",
-  "title": "Postcard title",
-  "description": "Detailed description",
-  "image_url": "URL to the image",
-  "latitude": 48.8584,
-  "longitude": 2.2945
-}
-
-Rules:
-1. Extract or generate a unique ID (use postcard_id if available, otherwise generate one)
-2. Extract the title
-3. Combine all descriptive information into a single description field
-4. Extract the image_url
-5. Extract latitude and longitude coordinates
-6. Return ONLY a valid JSON array of objects in this format
-7. If input has multiple postcards, return an array with all of them
-8. If any field is missing, try to infer reasonable defaults or use the data available
-
-Input JSON will vary in structure. Your job is to intelligently extract and map the data.`;
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Transform this JSON:\n\n${json}` },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required. Please add credits to your workspace." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "AI formatting failed" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (provider === "gemini") {
+      const key = clientKey || geminiSecret;
+      if (!key) throw new Error("Gemini API key not configured.");
+      rawResult = await formatWithGemini(json, key);
+    } else {
+      const key = clientKey || openaiSecret;
+      if (!key) throw new Error("OpenAI API key not configured.");
+      rawResult = await formatWithOpenAI(json, key);
     }
 
-    const data = await response.json();
-    const formattedJson = data.choices[0].message.content;
+    const formatted = cleanJson(rawResult);
 
-    // Extract JSON from markdown code blocks if present
-    let cleanJson = formattedJson.trim();
-    if (cleanJson.startsWith("```json")) {
-      cleanJson = cleanJson.replace(/```json\n?/g, "").replace(/```\n?$/g, "");
-    } else if (cleanJson.startsWith("```")) {
-      cleanJson = cleanJson.replace(/```\n?/g, "").replace(/```\n?$/g, "");
-    }
-
-    // Validate it's proper JSON
-    const parsed = JSON.parse(cleanJson);
-
-    return new Response(JSON.stringify({ formatted: parsed }), {
+    return new Response(JSON.stringify({ formatted }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error in format-postcard-json:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

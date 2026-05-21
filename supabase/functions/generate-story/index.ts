@@ -6,71 +6,85 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  try {
-    const { postcard } = await req.json();
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
-
-    const systemPrompt = `You are a historical storyteller specializing in bringing vintage postcards to life. Create engaging, immersive narratives that transport readers to the time and place depicted in the postcard. Your stories should:
+// ── Shared prompt ────────────────────────────────────────────
+const systemPrompt = `You are a historical storyteller specialising in vintage postcards and historical photographs. Create engaging, immersive narratives that transport readers to the time and place depicted. Your stories should:
 
 1. Be written in vivid, sensory-rich prose
 2. Include historical context and fascinating details about the era
 3. Paint a picture of daily life, architecture, and culture
-4. Be 3-4 paragraphs long
+4. Be 3–4 paragraphs long
 5. Maintain historical accuracy while being engaging
-6. Use a warm, nostalgic tone that honors the past
+6. Use a warm, nostalgic tone that honours the past`;
 
-Focus on making history feel alive and accessible.`;
-
-    const userPrompt = `Create a captivating historical narrative for this postcard:
+function userPrompt(postcard: { title: string; description: string; latitude: number; longitude: number }) {
+  return `Create a captivating historical narrative for this postcard:
 
 Title: ${postcard.title}
 Description: ${postcard.description}
 Location: ${postcard.latitude}°N, ${postcard.longitude}°E
 
-Generate a story that brings this moment in history to life, helping readers imagine themselves in this place and time.`;
+Generate a story that brings this moment in history to life.`;
+}
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+// ── OpenAI ───────────────────────────────────────────────────
+async function generateWithOpenAI(postcard: object, apiKey: string): Promise<string> {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt(postcard as any) },
+      ],
+    }),
+  });
+  if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
+
+// ── Gemini ───────────────────────────────────────────────────
+async function generateWithGemini(postcard: object, apiKey: string): Promise<string> {
+  const prompt = `${systemPrompt}\n\n${userPrompt(postcard as any)}`;
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+    {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 800, temperature: 0.8 },
       }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Payment required. Please add credits to your workspace." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "Story generation failed" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
     }
+  );
+  if (!response.ok) throw new Error(`Gemini error: ${response.status}`);
+  const data = await response.json();
+  return data.candidates[0].content.parts[0].text;
+}
 
-    const data = await response.json();
-    const story = data.choices[0].message.content;
+// ── Handler ──────────────────────────────────────────────────
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const { postcard, provider = "openai", apiKey: clientKey } = await req.json();
+
+    // Resolve API key: client-provided → Supabase secret
+    const openaiSecret = Deno.env.get("OPENAI_API_KEY");
+    const geminiSecret = Deno.env.get("GEMINI_API_KEY");
+
+    let story: string;
+
+    if (provider === "gemini") {
+      const key = clientKey || geminiSecret;
+      if (!key) throw new Error("Gemini API key not configured. Add it in Settings or set GEMINI_API_KEY in Supabase secrets.");
+      story = await generateWithGemini(postcard, key);
+    } else {
+      const key = clientKey || openaiSecret;
+      if (!key) throw new Error("OpenAI API key not configured. Add it in Settings or set OPENAI_API_KEY in Supabase secrets.");
+      story = await generateWithOpenAI(postcard, key);
+    }
 
     return new Response(JSON.stringify({ story }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -79,10 +93,7 @@ Generate a story that brings this moment in history to life, helping readers ima
     console.error("Error in generate-story:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

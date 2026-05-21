@@ -9,16 +9,37 @@ const Index = () => {
   const [postcards, setPostcards] = useState<Postcard[]>([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("geostories-postcards");
-    if (stored) {
-      try {
-        setPostcards(JSON.parse(stored));
-      } catch {
-        setPostcards(mockData as Postcard[]);
+    const loadPostcards = async () => {
+      // 1. Try to load from LocalStorage first (for newly imported data)
+      const stored = localStorage.getItem("geostories-postcards");
+      if (stored) {
+        try {
+          setPostcards(JSON.parse(stored));
+          return;
+        } catch (e) {
+          console.error("Failed to parse stored postcards", e);
+        }
       }
-    } else {
+
+      // 2. Try to fetch from the Static JSON file
+      try {
+        const response = await fetch("/eop/get_postcards.json");
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setPostcards(data);
+            return;
+          }
+        }
+      } catch (e) {
+        console.log("Synced EOP data not found, falling back to mock data.");
+      }
+
+      // 3. Fallback to mock data
       setPostcards(mockData as Postcard[]);
-    }
+    };
+
+    loadPostcards();
   }, []);
 
   const handleImport = (newPostcards: Postcard[]) => {

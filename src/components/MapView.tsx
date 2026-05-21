@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { useNavigate } from "react-router-dom";
 import { Postcard } from "@/types/postcard";
-import { Loader2, MapPin, ClipboardCopy, Check } from "lucide-react";
+import { Loader2, MapPin, ClipboardCopy, Check, Home } from "lucide-react";
 
 interface MapViewProps {
   postcards: Postcard[];
@@ -212,6 +212,12 @@ Please guide me step by step through whichever part I need help with.
       setShowKeyInput(true);
     }
   };
+  const handleResetView = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setCenter({ lat: 48.8584, lng: 2.2945 });
+      mapInstanceRef.current.setZoom(5);
+    }
+  };
 
 
   const handleApiKeySubmit = (e: React.FormEvent) => {
@@ -308,6 +314,17 @@ Please guide me step by step through whichever part I need help with.
       )}
       <div ref={mapRef} className="w-full h-full" />
       
+      {/* Reset View Button */}
+      <div className="absolute bottom-6 right-6 z-10 flex flex-col gap-2">
+        <button
+          onClick={handleResetView}
+          title="Reset View"
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-card border border-border shadow-lg text-primary hover:text-accent hover:border-accent transition-all active:scale-95"
+        >
+          <Home className="w-5 h-5" />
+        </button>
+      </div>
+
       {/* Elegant overlay header */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10">
         <div className="vintage-card px-8 py-4 backdrop-blur-sm bg-card/95">
