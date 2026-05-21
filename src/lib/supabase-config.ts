@@ -3,6 +3,13 @@
  * Priority: localStorage (user-configured) → .env fallback
  */
 export function getSupabaseConfig() {
+  // Automatically clear deprecated project ref from localStorage to fall back to the new .env configuration
+  const storedUrl = localStorage.getItem("supabase_url");
+  if (storedUrl && (storedUrl.includes("ypsqpqudayjelmoqvcoq") || storedUrl.includes("ypsqpqudayjelmoqvcoq.supabase.co"))) {
+    localStorage.removeItem("supabase_url");
+    localStorage.removeItem("supabase_anon_key");
+  }
+
   return {
     url:
       localStorage.getItem("supabase_url") ||
