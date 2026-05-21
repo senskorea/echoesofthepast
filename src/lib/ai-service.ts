@@ -1,4 +1,4 @@
-import { getAIConfig } from "./supabase-config";
+import { getAIConfig, getSupabaseConfig } from "./supabase-config";
 
 export async function generateText(prompt: string, modelId: string, base64Image?: string, mimeType: string = "image/jpeg"): Promise<string> {
   const { provider, apiKey } = getAIConfig();
@@ -122,56 +122,51 @@ export async function generateVideo(
   base64Image?: string,
   mimeType: string = "image/jpeg"
 ): Promise<string> {
-  const apiKey = localStorage.getItem("gemini_api_key");
-  if (!apiKey) throw new Error(`Gemini API key missing. Add it in Settings under AI Provider.`);
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning?key=${apiKey}`;
-
-  const instance: any = { prompt };
-  if (base64Image) {
-    instance.image = {
-      bytesBase64Encoded: base64Image.split(",").pop() || base64Image,
-      mimeType,
-    };
+  const { url: supabaseUrl, anonKey: supabaseKey } = getSupabaseConfig();
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase is not configured. Please complete settings configuration first.");
   }
 
-  const res = await fetch(url, {
+  const apiKey = localStorage.getItem("gemini_api_key") || "";
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/generate-video`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${supabaseKey}`,
+    },
     body: JSON.stringify({
-      instances: [instance],
-      parameters: {
-        sampleCount: 1,
-        aspectRatio: "16:9",
-        durationSeconds: 4,
-      },
+      action: "generate",
+      prompt,
+      modelId,
+      base64Image,
+      mimeType,
+      apiKey,
     }),
   });
 
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
-    throw new Error(e?.error?.message || `Veo Video API error ${res.status}.`);
+    throw new Error(e?.error || e?.message || `Failed to initiate video generation (status ${res.status}).`);
   }
 
   const d = await res.json();
-  if (!d.name) {
-    throw new Error("No operation name returned from Veo API.");
+  if (!d.operationName) {
+    throw new Error("No operation name returned from video generation function.");
   }
-  return d.name;
+  return d.operationName;
 }
 
 export async function pollVideoOperation(
   operationName: string,
   onProgress?: (status: string) => void
 ): Promise<string> {
-  const apiKey = localStorage.getItem("gemini_api_key");
-  if (!apiKey) throw new Error(`Gemini API key missing. Add it in Settings under AI Provider.`);
+  const { url: supabaseUrl, anonKey: supabaseKey } = getSupabaseConfig();
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase is not configured. Please complete settings configuration first.");
+  }
 
-  const cleanName = operationName.startsWith("operations/") || operationName.startsWith("projects/") 
-    ? operationName 
-    : `operations/${operationName}`;
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/${cleanName}?key=${apiKey}`;
+  const apiKey = localStorage.getItem("gemini_api_key") || "";
 
   let attempts = 0;
   const maxAttempts = 120; // 6 minutes max polling
@@ -182,32 +177,41 @@ export async function pollVideoOperation(
       onProgress(`Video generating... (poll #${attempts + 1})`);
     }
 
-    const res = await fetch(url);
+    const res = await fetch(`${supabaseUrl}/functions/v1/generate-video`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({
+        action: "poll",
+        operationName,
+        apiKey,
+      }),
+    });
+
     if (!res.ok) {
       const e = await res.json().catch(() => ({}));
-      throw new Error(e?.error?.message || `Failed to check video status: ${res.status}`);
+      throw new Error(e?.error || e?.message || `Failed to check video status: ${res.status}`);
     }
 
     const d = await res.json();
     if (d.done) {
-      const samples = d.response?.generatedSamples || d.response?.generateVideoResponse?.generatedSamples;
-      const videoUri = samples?.[0]?.video?.uri;
-
-      if (!videoUri) {
-        throw new Error("Video generation completed, but no video URI was found.");
+      if (!d.videoUrl) {
+        throw new Error("Video generation completed, but no video URL was found.");
       }
 
       if (onProgress) {
         onProgress("Downloading generated video...");
       }
 
-      const downloadUrl = videoUri.includes("?key=") 
-        ? videoUri 
-        : `${videoUri}${videoUri.includes("?") ? "&" : "?"}key=${apiKey}`;
-
-      const videoRes = await fetch(downloadUrl);
+      // Download the video via the direct URL to turn it into a local object URL blob
+      const videoRes = await fetch(d.videoUrl);
       if (!videoRes.ok) {
-        throw new Error(`Failed to download video file: ${videoRes.status}`);
+        // Fallback: if browser blocks fetch due to CORS on the media URL, just return d.videoUrl directly!
+        // As a public video source, <video> tag can play d.videoUrl directly without CORS issues.
+        console.warn("Direct video file fetch blocked by CORS, falling back to direct video URL playback.");
+        return d.videoUrl;
       }
 
       const videoBlob = await videoRes.blob();
