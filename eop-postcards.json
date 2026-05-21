@@ -1,0 +1,47 @@
+[
+  {
+    "id": "pc_paris_etoile_aerial_1900s",
+    "title": "Aerial Panorama of Place de l'Étoile, Paris",
+    "description": "An early 20th-century aerial photograph of the Place de l'Étoile (now Place Charles de Gaulle) in Paris, featuring the Arc de Triomphe at its center. The photo was taken from a balloon at an altitude of 700 meters.",
+    "latitude": 48.8738,
+    "longitude": 2.295,
+    "imageUrl": "/eop-images/pc_paris_etoile_aerial_1900s.webp",
+    "detailUrl": "#"
+  },
+  {
+    "id": "20250930T113001",
+    "title": "Foișorul de Foc, Bucharest, Romania",
+    "description": "A vintage postcard depicting the Foișorul de Foc (The Fire Tower) in Bucharest. The card was postally used in 1903 and published by Ad. Maier & D. Stern.",
+    "latitude": 44.4419,
+    "longitude": 26.115,
+    "imageUrl": "/eop-images/20250930T113001.png",
+    "detailUrl": "#"
+  },
+  {
+    "id": "pc_ateneul_roman",
+    "title": "Ateneul Român (Romanian Athenaeum), Bucharest",
+    "description": "A vintage postcard featuring the Romanian Athenaeum, a famous concert hall in Bucharest, surrounded by its park. The image captures the grandeur of the building and its green surroundings.",
+    "latitude": 44.4402,
+    "longitude": 26.0975,
+    "imageUrl": "/eop-images/pc_ateneul_roman.png",
+    "detailUrl": "#"
+  },
+  {
+    "id": "pc_palatul_printului_sturza",
+    "title": "Palatul Printului Sturza, Bucharest",
+    "description": "A vintage postcard featuring the ornate Sturza Palace in Bucharest, with details of its elaborate architecture and a street scene with pedestrians. The postcard is postally used with two Romanian stamps.",
+    "latitude": 44.4361,
+    "longitude": 26.0964,
+    "imageUrl": "/eop-images/pc_palatul_printului_sturza.png",
+    "detailUrl": "#"
+  },
+  {
+    "id": "pc_los_angeles_large_letter_linen",
+    "title": "Greetings from Los Angeles, California",
+    "description": "A classic 'Large Letter' linen postcard from Los Angeles, California. Each letter of 'LOS ANGELES' contains a different iconic scene from the city and its surroundings.",
+    "latitude": 34.0522,
+    "longitude": -118.2437,
+    "imageUrl": "/eop-images/pc_los_angeles_large_letter_linen.png",
+    "detailUrl": "#"
+  }
+]
