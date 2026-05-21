@@ -237,18 +237,19 @@ const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => 
     }, imageFile?.type || 'image/jpeg');
   };
 
-  const uploadToSupabase = async (): Promise<string> => {
-    if (!imageFile) throw new Error("No image selected");
+  const uploadToSupabase = async (fileParam?: File): Promise<string> => {
+    const fileToUpload = fileParam || imageFile;
+    if (!fileToUpload) throw new Error("No image selected");
     const supabase = getSupabaseClient();
     
     // Attempt to create the bucket if it doesn't exist (this works if the project allows it)
     await supabase.storage.createBucket("postcards", { public: true }).catch(() => {});
 
-    const ext = imageFile.name.split(".").pop();
+    const ext = fileToUpload.name.split(".").pop();
     const filename = `${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage
       .from("postcards")
-      .upload(filename, imageFile, { upsert: false, contentType: imageFile.type });
+      .upload(filename, fileToUpload, { upsert: false, contentType: fileToUpload.type });
       
     if (error) {
       if (error.message.includes("Bucket not found")) {
@@ -259,6 +260,7 @@ const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => 
     const { data } = supabase.storage.from("postcards").getPublicUrl(filename);
     return data.publicUrl;
   };
+
 
   const analyseWithAI = async () => {
     if (!imageFile) return;
