@@ -52,7 +52,7 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
         systemPrompt += `\nModule Details: ${currentModule.shortDesc}`;
       }
 
-      const history = messages.map(m => `${m.role === "user" ? "User" : "Tutor"}: ${m.content}`).join("\n");
+      const history = messages.slice(-10).map(m => `${m.role === "user" ? "User" : "Tutor"}: ${m.content}`).join("\n");
       const fullPrompt = `${systemPrompt}\n\nCHAT HISTORY:\n${history}\n\nUser: ${userMsg}\n\nTutor:`;
 
       const response = await generateText(fullPrompt, modelId);

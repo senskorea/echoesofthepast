@@ -40,7 +40,7 @@ export async function generateText(prompt: string, modelId: string, base64Image?
       body: JSON.stringify({ 
         model: modelId, 
         messages: [{ role: "user", content: messageContent }], 
-        max_tokens: 2000 
+        ...(modelId.startsWith("o1") ? { max_completion_tokens: 2000 } : { max_tokens: 2000 })
       }),
     });
     if (!res.ok) { 
@@ -80,7 +80,7 @@ export async function generateImage(prompt: string, modelId: string): Promise<st
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({ 
-        model: "dall-e-3", 
+        model: modelId,
         prompt, 
         size: "1024x1024", 
         quality: "standard", 
@@ -201,21 +201,7 @@ export async function pollVideoOperation(
         throw new Error("Video generation completed, but no video URL was found.");
       }
 
-      if (onProgress) {
-        onProgress("Downloading generated video...");
-      }
-
-      // Download the video via the direct URL to turn it into a local object URL blob
-      const videoRes = await fetch(d.videoUrl);
-      if (!videoRes.ok) {
-        // Fallback: if browser blocks fetch due to CORS on the media URL, just return d.videoUrl directly!
-        // As a public video source, <video> tag can play d.videoUrl directly without CORS issues.
-        console.warn("Direct video file fetch blocked by CORS, falling back to direct video URL playback.");
-        return d.videoUrl;
-      }
-
-      const videoBlob = await videoRes.blob();
-      return URL.createObjectURL(videoBlob);
+      return d.videoUrl;
     }
 
     await new Promise((resolve) => setTimeout(resolve, delayMs));
