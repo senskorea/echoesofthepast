@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Download, Trash2, Edit, MapPin } from "lucide-react";
+import { Download, Trash2, Edit, MapPin, Search, X } from "lucide-react";
 import MapView from "@/components/MapView";
 import ImportDialog from "@/components/ImportDialog";
 import { Postcard } from "@/types/postcard";
@@ -17,6 +17,24 @@ const EOPHome = () => {
   const [activeView, setActiveView] = useState<View>("gallery");
   const [postcards, setPostcards] = useState<Postcard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredPostcards = postcards.filter((card) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+
+    const titleMatch = card.title?.toLowerCase().includes(q);
+    const descMatch = card.description?.toLowerCase().includes(q);
+    const latMatch = card.latitude?.toString().includes(q);
+    const lngMatch = card.longitude?.toString().includes(q);
+
+    // AI Vision fields search
+    const vision = card.aiVisionResults;
+    const transMatch = vision?.transcribed_text?.toLowerCase().includes(q);
+    const visDescMatch = vision?.visual_description?.toLowerCase().includes(q);
+
+    return titleMatch || descMatch || latMatch || lngMatch || transMatch || visDescMatch;
+  });
 
   useEffect(() => {
     const load = async () => {
@@ -90,6 +108,27 @@ const EOPHome = () => {
           <p className="eop-hero-sub">
             {t("home_hero_sub")}
           </p>
+          <div className="eop-hero-search-container">
+            <div className="eop-search-input-wrapper">
+              <input
+                type="text"
+                className="eop-search-input"
+                placeholder={t("home_search_placeholder")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Search className="eop-search-icon" />
+              {searchQuery && (
+                <button
+                  className="eop-search-clear"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
+                >
+                  <X />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
         <div className="eop-hero-image">
           <img src="/src/assets/eop_hero_premium.png" alt="Echoes of the Past" />
@@ -100,7 +139,32 @@ const EOPHome = () => {
       <div className="eop-toggle-bar">
         <div className="eop-toggle-left">
           <h2 className="eop-section-title">Geostories</h2>
-          <span className="eop-count">{postcards.length} entries</span>
+          <span className="eop-count">
+            {searchQuery.trim()
+              ? `${filteredPostcards.length} of ${postcards.length} found`
+              : `${postcards.length} entries`}
+          </span>
+        </div>
+        <div className="eop-toggle-search">
+          <div className="eop-toggle-search-wrapper">
+            <input
+              type="text"
+              className="eop-toggle-search-input"
+              placeholder={t("home_search_placeholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Search className="eop-toggle-search-icon" />
+            {searchQuery && (
+              <button
+                className="eop-toggle-search-clear"
+                onClick={() => setSearchQuery("")}
+                aria-label="Clear search"
+              >
+                <X />
+              </button>
+            )}
+          </div>
         </div>
         <div className="eop-toggle-btns">
           <button
@@ -130,9 +194,20 @@ const EOPHome = () => {
             <div className="eop-empty">
               <p>No stories yet. <a href="/eop/upload/">Add the first one.</a></p>
             </div>
+          ) : filteredPostcards.length === 0 ? (
+            <div className="eop-empty-search">
+              <Search className="eop-empty-search-icon" />
+              <h3 className="eop-empty-search-title">No matching stories</h3>
+              <p className="eop-empty-search-desc">
+                We couldn't find any results for "{searchQuery}". Try adjusting your keywords or search query.
+              </p>
+              <button className="eop-empty-search-btn" onClick={() => setSearchQuery("")}>
+                Clear Search
+              </button>
+            </div>
           ) : (
             <div className="eop-grid">
-              {postcards.map((card) => {
+              {filteredPostcards.map((card) => {
                 const img = card.imageUrl || card.image_url || "";
                 const href = card.detailUrl && card.detailUrl !== "#"
                   ? card.detailUrl
@@ -159,7 +234,7 @@ const EOPHome = () => {
                     </div>
                     <div className="eop-card-arrow">→</div>
                     
-                    <div className="eop-card-actions" style={{ position: "absolute", top: 10, right: 10, display: "flex", gap: 6, opacity: 0, transition: "opacity 0.2s" }}>
+                    <div className="eop-card-actions">
                       <ImportDialog 
                         onImport={handleImportOrUpdate} 
                         editingCard={card}
@@ -167,25 +242,22 @@ const EOPHome = () => {
                           <button 
                             onClick={(e) => e.stopPropagation()} // Prevent card navigation
                             className="eop-card-action-btn"
-                            style={{ background: "rgba(255,255,255,0.9)", border: "1px solid var(--grey-5)", padding: 6, borderRadius: 6 }}
                             title="Edit"
                           >
-                            <Edit style={{ width: 14, height: 14, color: "var(--grey-2)" }} />
+                            <Edit style={{ width: 14, height: 14 }} />
                           </button>
                         }
                       />
                       <button 
                         onClick={(e) => handleExportCard(e, card)}
                         className="eop-card-action-btn"
-                        style={{ background: "rgba(255,255,255,0.9)", border: "1px solid var(--grey-5)", padding: 6, borderRadius: 6 }}
                         title="Export JSON"
                       >
-                        <Download style={{ width: 14, height: 14, color: "var(--grey-2)" }} />
+                        <Download style={{ width: 14, height: 14 }} />
                       </button>
                       <button 
                         onClick={(e) => handleDelete(e, card.id)}
-                        className="eop-card-action-btn"
-                        style={{ background: "rgba(255,255,255,0.9)", border: "1px solid var(--red)", color: "var(--red)", padding: 6, borderRadius: 6 }}
+                        className="eop-card-action-btn delete-btn"
                         title="Delete"
                       >
                         <Trash2 style={{ width: 14, height: 14 }} />
@@ -202,7 +274,7 @@ const EOPHome = () => {
       {/* ── MAP VIEW ── */}
       {activeView === "map" && (
         <section className="eop-map-section">
-          <MapView postcards={postcards} />
+          <MapView postcards={filteredPostcards} />
         </section>
       )}
 
