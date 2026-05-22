@@ -9,6 +9,7 @@ import { loadAllPostcards } from "@/lib/data-loader";
 
 import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import heroImg from "@/assets/eop_hero_premium.png";
 
 type View = "gallery" | "map";
 
@@ -108,30 +109,9 @@ const EOPHome = () => {
           <p className="eop-hero-sub">
             {t("home_hero_sub")}
           </p>
-          <div className="eop-hero-search-container">
-            <div className="eop-search-input-wrapper">
-              <input
-                type="text"
-                className="eop-search-input"
-                placeholder={t("home_search_placeholder")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Search className="eop-search-icon" />
-              {searchQuery && (
-                <button
-                  className="eop-search-clear"
-                  onClick={() => setSearchQuery("")}
-                  aria-label="Clear search"
-                >
-                  <X />
-                </button>
-              )}
-            </div>
-          </div>
         </div>
         <div className="eop-hero-image">
-          <img src="/src/assets/eop_hero_premium.png" alt="Echoes of the Past" />
+          <img src={heroImg} alt="Echoes of the Past" />
         </div>
       </section>
 
@@ -192,7 +172,7 @@ const EOPHome = () => {
             </div>
           ) : postcards.length === 0 ? (
             <div className="eop-empty">
-              <p>No stories yet. <a href="/eop/upload/">Add the first one.</a></p>
+              <p>No stories yet.</p>
             </div>
           ) : filteredPostcards.length === 0 ? (
             <div className="eop-empty-search">
@@ -284,7 +264,6 @@ const EOPHome = () => {
           <span>© {new Date().getFullYear()} Small Academy — Erasmus+ Programme</span>
           <div className="eop-footer-links">
             <a href="https://github.com/SmallAcademy" target="_blank" rel="noreferrer">GitHub</a>
-            <a href="/contact/">Contact</a>
             <Link to="/settings">Settings</Link>
           </div>
         </div>

@@ -411,7 +411,7 @@ For coordinates: identify location from visual clues. If uncertain, give best es
   };
 
   const handleUploadSubmit = async () => {
-    if (!imageFile) {
+    if (!imageFile && !uploadedUrl) {
       const desc = "Please select an image first.";
       toast({
         title: "No image",
@@ -524,17 +524,23 @@ For coordinates: identify location from visual clues. If uncertain, give best es
     setIsProcessing(true);
     try {
       const { url, anonKey } = getSupabaseConfig();
-      const response = await fetch(`${url}/functions/v1/format-postcard-json`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${anonKey}` },
-        body: JSON.stringify({ json: jsonInput }),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to format JSON");
+      let postcards: any[] = [];
+      try {
+        const response = await fetch(`${url}/functions/v1/format-postcard-json`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${anonKey}` },
+          body: JSON.stringify({ json: jsonInput }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to format JSON via edge function");
+        }
+        const { formatted } = await response.json();
+        postcards = Array.isArray(formatted) ? formatted : [formatted];
+      } catch (err) {
+        // Fallback: Try native client-side parsing
+        const parsed = JSON.parse(jsonInput);
+        postcards = Array.isArray(parsed) ? parsed : [parsed];
       }
-      const { formatted } = await response.json();
-      const postcards = Array.isArray(formatted) ? formatted : [formatted];
       onImport(postcards);
       setOpen(false);
       resetAll();
@@ -729,7 +735,7 @@ For coordinates: identify location from visual clues. If uncertain, give best es
                       };
                       input.click();
                     }}
-                    style={{ width: 80, height: 80, border: "1px dashed var(--grey-4)", borderRadius: 8, display: "flex", alignItems: "center", justifyCenter: "center", background: "var(--grey-6)" }}
+                    style={{ width: 80, height: 80, border: "1px dashed var(--grey-4)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--grey-6)" }}
                   >
                     <ImagePlus style={{ width: 20, height: 20, color: "var(--grey-4)" }} />
                   </button>
@@ -830,7 +836,7 @@ For coordinates: identify location from visual clues. If uncertain, give best es
               <button
                 className="eop-btn-primary"
                 onClick={handleUploadSubmit}
-                disabled={uploading || !imageFile}
+                disabled={uploading || (!imageFile && !uploadedUrl)}
               >
                 {uploading
                   ? <><Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> Uploading…</>

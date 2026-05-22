@@ -308,9 +308,12 @@ const PostcardDetail = () => {
         // First generate the script as text, then convert to audio
         const script = await generateText(promptText, modelId, base64Image, mimeType);
         const blob = await generateAudio(script);
-        const blobUrl = URL.createObjectURL(blob);
-        setCurrentOutput({ type: "audio", content: blobUrl, audioBlob: blob });
-
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+          const base64data = reader.result;
+          setCurrentOutput({ type: "audio", content: base64data as string, audioBlob: blob });
+        };
       } else if (activeType === "video") {
         const geminiKey = localStorage.getItem("gemini_api_key");
         if (!geminiKey) throw new Error("Video generation requires a Gemini API key. Add it in Settings under AI Provider.");
@@ -573,8 +576,8 @@ const PostcardDetail = () => {
                 </select>
                 <p style={{ fontSize: "0.7rem", color: "var(--grey-3)", lineHeight: 1.4 }}>
                   {selectedModel 
-                    ? [...TEXT_MODELS, ...IMAGE_MODELS].find(m => m.id === selectedModel)?.description
-                    : `We'll pick the best ${activePreset.type === "image" ? "image" : "text"} model for your selected provider.`}
+                    ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS].find(m => m.id === selectedModel)?.description
+                    : `We'll pick the best ${activePreset.type === "image" ? "image" : (activePreset.type === "video" ? "video" : "text")} model for your selected provider.`}
                 </p>
               </div>
 
