@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Loader2, Download, Save, Volume2, ImageIcon, FileText, Pencil, BookOpen, Mail, Clapperboard, Check, FileJson, Sparkles, ScanText, HeartPulse, Lightbulb, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, MapPin, Loader2, Download, Save, Volume2, ImageIcon, FileText, Pencil, BookOpen, Mail, Clapperboard, Check, FileJson, Sparkles, ScanText, HeartPulse, Lightbulb, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, Play, Pause, Wand2, Layers } from "lucide-react";
 import mockData from "@/data/mock-data.json";
 import { Postcard } from "@/types/postcard";
 import { getAIConfig } from "@/lib/supabase-config";
@@ -146,6 +146,18 @@ const PostcardDetail = () => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [generationStatus, setGenerationStatus] = useState("");
 
+  // Stepped Wizard & Visual Features States
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [selectedMedium, setSelectedMedium] = useState<AssetType | "custom">("text");
+  const [isPolishing, setIsPolishing] = useState(false);
+  const [loaderStep, setLoaderStep] = useState<number>(1);
+
+  // Audio Custom Waveform Visualizer States
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioInstance, setAudioInstance] = useState<HTMLAudioElement | null>(null);
+
   const activePreset = PRESETS.find(p => p.id === selectedPreset) || PRESETS[0];
   const activeType = activePreset.id === "custom" ? customType : activePreset.type;
   const { provider } = getAIConfig();
@@ -198,6 +210,138 @@ const PostcardDetail = () => {
     };
     load();
   }, [id]);
+
+  // checklist loader step progression
+  useEffect(() => {
+    let loaderInterval: any;
+    if (isGenerating) {
+      setLoaderStep(1);
+      loaderInterval = setInterval(() => {
+        setLoaderStep((prev) => (prev < 3 ? prev + 1 : prev));
+      }, 3500);
+    }
+    return () => {
+      if (loaderInterval) clearInterval(loaderInterval);
+    };
+  }, [isGenerating]);
+
+  // Stop and clean up audio when preset or output changes
+  useEffect(() => {
+    if (audioInstance) {
+      audioInstance.pause();
+      setAudioInstance(null);
+      setIsPlaying(false);
+      setAudioCurrentTime(0);
+      setAudioDuration(0);
+    }
+  }, [selectedPreset, currentOutput]);
+
+  // Cleanup audio element on component unmount
+  useEffect(() => {
+    return () => {
+      if (audioInstance) {
+        audioInstance.pause();
+      }
+    };
+  }, [audioInstance]);
+
+  const togglePlayAudio = (contentUrl: string) => {
+    if (audioInstance) {
+      if (isPlaying) {
+        audioInstance.pause();
+        setIsPlaying(false);
+      } else {
+        audioInstance.play().catch((e) => console.error("Audio playback failed", e));
+        setIsPlaying(true);
+      }
+    } else {
+      const audio = new Audio(contentUrl);
+      audio.addEventListener("loadedmetadata", () => {
+        setAudioDuration(audio.duration);
+      });
+      audio.addEventListener("timeupdate", () => {
+        setAudioCurrentTime(audio.currentTime);
+      });
+      audio.addEventListener("ended", () => {
+        setIsPlaying(false);
+        setAudioCurrentTime(0);
+      });
+      audio.play().catch((e) => console.error("Audio playback failed", e));
+      setAudioInstance(audio);
+      setIsPlaying(true);
+    }
+  };
+
+  const handlePolishPrompt = async () => {
+    if (!customPrompt.trim()) return;
+    setIsPolishing(true);
+    try {
+      const { provider } = getAIConfig();
+      const textCompatible = TEXT_MODELS;
+      const textModelId = textCompatible.find((m) => m.provider === provider)?.id || textCompatible[0].id;
+
+      const polishPromptText = `You are an expert prompt engineer for generative AI. Enhance and expand the following draft prompt for maximum historical accuracy, vivid sensory detail, and aesthetic quality. Keep the output concise (under 80 words) and directly usable as a prompt. Do not write any introductory or concluding text, only return the polished prompt. Draft prompt: "${customPrompt}"`;
+
+      const polished = await generateText(polishPromptText, textModelId);
+      setCustomPrompt(polished.trim());
+      toast({ title: "Prompt Polished! ✨", description: "Enriched your draft for better results." });
+    } catch (err) {
+      toast({
+        title: "Failed to polish prompt",
+        description: err instanceof Error ? err.message : "Error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPolishing(false);
+    }
+  };
+
+  const injectVariable = (varName: string) => {
+    if (!postcard) return;
+    let val = "";
+    if (varName === "title") val = postcard.title;
+    else if (varName === "description") val = postcard.description || "";
+    else if (varName === "latitude") val = postcard.latitude.toFixed(4) + "°N";
+    else if (varName === "longitude") val = postcard.longitude.toFixed(4) + "°E";
+
+    setCustomPrompt((prev) => (prev ? `${prev} ${val}` : val));
+    toast({ title: `Injected {${varName}}`, description: `Added "${val}" to your prompt.` });
+  };
+
+  const getLoadingSteps = (type: AssetType) => {
+    switch (type) {
+      case "text":
+        return [
+          "Reading postcard coordinates & historical details...",
+          "Synthesizing regional architectural context...",
+          "Composing immersive period-accurate narrative...",
+        ];
+      case "image":
+        return [
+          "Analyzing visual prompt metadata and style details...",
+          "Constructing layout and architectural framework...",
+          "Generating high-fidelity reimagined pixels...",
+        ];
+      case "audio":
+        return [
+          "Reading source narrative script...",
+          "Generating natural text-to-speech voice synthesis...",
+          "Mastering audio file track...",
+        ];
+      case "video":
+        return [
+          "Sending visual blueprint to rendering engine...",
+          "Synthesizing cinematic motion path and panning...",
+          "Compiling and rendering final video frames...",
+        ];
+      default:
+        return [
+          "Initializing creative AI studio models...",
+          "Processing input sources and settings...",
+          "Generating finished output asset...",
+        ];
+    }
+  };
 
   useEffect(() => {
     if (lightboxIndex === null) return;
@@ -537,181 +681,418 @@ const PostcardDetail = () => {
             <p className="eop-label">AI Studio</p>
             <h2 className="pd-studio-title">Generate Content</h2>
 
-            {/* Preset grid */}
-            <div className="pd-preset-grid">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  className={`pd-preset-card ${selectedPreset === p.id ? "active" : ""}`}
-                  onClick={() => {
-                    setSelectedPreset(p.id);
-                    setSelectedModel(""); // Reset model to show compatible ones
-                    setCurrentOutput(null);
-                  }}
-                >
-                  {savedAssets[p.id] && <div className="pd-preset-saved-dot" />}
-                  <span className={`pd-preset-badge pd-badge-${p.type}`}>{p.badge}</span>
-                  <div className="pd-preset-icon">{p.icon}</div>
-                  <span className="pd-preset-label">{p.label}</span>
-                </button>
-              ))}
+            {/* Stepped Wizard Navigation */}
+            <div className="pd-wizard-nav">
+              <button 
+                className={`pd-wizard-step-btn ${currentStep === 1 ? "active" : ""} ${currentStep > 1 ? "completed" : ""}`}
+                onClick={() => setCurrentStep(1)}
+              >
+                <div className="pd-wizard-number">{currentStep > 1 ? <Check style={{ width: 10, height: 10 }} /> : "1"}</div>
+                <span>1. Medium</span>
+              </button>
+              <button 
+                className={`pd-wizard-step-btn ${currentStep === 2 ? "active" : ""} ${currentStep > 2 ? "completed" : ""}`}
+                onClick={() => setCurrentStep(2)}
+                disabled={!selectedMedium}
+              >
+                <div className="pd-wizard-number">{currentStep > 2 ? <Check style={{ width: 10, height: 10 }} /> : "2"}</div>
+                <span>2. Template</span>
+              </button>
+              <button 
+                className={`pd-wizard-step-btn ${currentStep === 3 ? "active" : ""}`}
+                onClick={() => setCurrentStep(3)}
+                disabled={!selectedPreset}
+              >
+                <div className="pd-wizard-number">3</div>
+                <span>3. Refine</span>
+              </button>
             </div>
 
-            {/* Model Selector & Options (Dependent on Preset) */}
-            <div className="pd-model-selector" style={{ marginBottom: 24, padding: 20, background: "var(--grey-6)", borderRadius: 12, border: "1px solid var(--grey-5)" }}>
-              <p className="eop-label" style={{ marginBottom: 12 }}>Step 2: Configure & Generate</p>
-              
-              <div style={{ marginBottom: 16 }}>
-                <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>AI Model</label>
-                <select 
-                  className="eop-input" 
-                  value={selectedModel} 
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  style={{ background: "white", width: "100%", marginBottom: 6 }}
-                >
-                  <option value="">Recommended for {activePreset.badge}</option>
-                  {(activePreset.id === "custom" ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS] : (activePreset.type === "image" ? IMAGE_MODELS : (activePreset.type === "video" ? VIDEO_MODELS : TEXT_MODELS))).map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
-                <p style={{ fontSize: "0.7rem", color: "var(--grey-3)", lineHeight: 1.4 }}>
-                  {selectedModel 
-                    ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS].find(m => m.id === selectedModel)?.description
-                    : `We'll pick the best ${activePreset.type === "image" ? "image" : (activePreset.type === "video" ? "video" : "text")} model for your selected provider.`}
-                </p>
-              </div>
-
-              {selectedPreset === "custom" && (
-                <div style={{ marginBottom: 16 }}>
-                  <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>Output Format</label>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {(["text", "image", "audio", "video"] as AssetType[]).map(t => (
-                      <button 
-                        key={t}
-                        onClick={() => setCustomType(t)}
-                        className="pd-action-btn"
-                        style={{ flex: "1 1 calc(50% - 8px)", justifyContent: "center", background: customType === t ? "var(--grey-5)" : "white" }}
+            {/* Step Content Switcher */}
+            <div className="pd-wizard-content">
+              {/* STEP 1: CHOOSE MEDIUM */}
+              {currentStep === 1 && (
+                <div>
+                  <p className="eop-label" style={{ marginBottom: 12 }}>Step 1: Select Output Medium</p>
+                  <div className="pd-medium-tabs">
+                    {[
+                      { id: "text", label: "Text", icon: <FileText className="pd-medium-tab-icon" /> },
+                      { id: "image", label: "Image", icon: <ImageIcon className="pd-medium-tab-icon" /> },
+                      { id: "audio", label: "Audio", icon: <Volume2 className="pd-medium-tab-icon" /> },
+                      { id: "video", label: "Video", icon: <Clapperboard className="pd-medium-tab-icon" /> },
+                      { id: "custom", label: "Custom", icon: <Layers className="pd-medium-tab-icon" /> }
+                    ].map(tab => (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setSelectedMedium(tab.id as any);
+                          // Auto select the first preset of this medium
+                          const firstPreset = PRESETS.find(p => p.type === tab.id || (tab.id === "custom" && p.id === "custom"));
+                          if (firstPreset) {
+                            setSelectedPreset(firstPreset.id);
+                            setSelectedModel("");
+                            setCurrentOutput(null);
+                          }
+                          setCurrentStep(2);
+                        }}
+                        className={`pd-medium-tab ${selectedMedium === tab.id ? `active-${tab.id}` : ""}`}
                       >
-                        {t === "video" ? "Video" : t.charAt(0).toUpperCase() + t.slice(1)}
+                        {tab.icon}
+                        <span className="pd-medium-tab-label">{tab.label}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {activeType === "image" && (
-                <div style={{ marginBottom: 16 }}>
-                  <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>
-                    Image Input Source
-                  </label>
-                  <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
+              {/* STEP 2: SELECT TEMPLATE */}
+              {currentStep === 2 && (
+                <div>
+                  <div style={{ display: "flex", justifyContext: "space-between", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <p className="eop-label">Step 2: Choose Creative Template</p>
                     <button 
-                      onClick={() => setImageSource("text")}
-                      className="pd-action-btn"
-                      style={{ 
-                        justifyContent: "flex-start", 
-                        padding: "10px 12px", 
-                        background: imageSource === "text" ? "var(--grey-5)" : "white",
-                        border: "1px solid var(--grey-4)",
-                        fontSize: "0.85rem",
-                        width: "100%"
-                      }}
+                      onClick={() => setCurrentStep(1)} 
+                      style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: 4, color: "var(--grey-3)", background: "none", border: "none" }}
                     >
-                      <FileText style={{ width: 14, height: 14, marginRight: 8 }} />
-                      <span>Use Text Description (Title & Short Description)</span>
-                    </button>
-                    {postcard.aiVisionResults && (
-                      <button 
-                        onClick={() => setImageSource("vision")}
-                        className="pd-action-btn"
-                        style={{ 
-                          justifyContent: "flex-start", 
-                          padding: "10px 12px", 
-                          background: imageSource === "vision" ? "var(--grey-5)" : "white",
-                          border: "1px solid var(--grey-4)",
-                          fontSize: "0.85rem",
-                          width: "100%"
-                        }}
-                      >
-                        <ScanText style={{ width: 14, height: 14, marginRight: 8 }} />
-                        <span>Use AI Vision Results (Pre-analyzed Description)</span>
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => setImageSource("actual")}
-                      className="pd-action-btn"
-                      style={{ 
-                        justifyContent: "flex-start", 
-                        padding: "10px 12px", 
-                        background: imageSource === "actual" ? "var(--grey-5)" : "white",
-                        border: "1px solid var(--grey-4)",
-                        fontSize: "0.85rem",
-                        width: "100%"
-                      }}
-                    >
-                      <ImageIcon style={{ width: 14, height: 14, marginRight: 8 }} />
-                      <span>Use Actual Image (Sends original image to Vision AI to guide creation)</span>
+                      <ArrowLeft style={{ width: 12, height: 12 }} /> Back to Medium
                     </button>
                   </div>
-                  <p style={{ fontSize: "0.7rem", color: "var(--grey-3)", marginTop: 6, lineHeight: 1.4 }}>
-                    {imageSource === "text" && "Generates the image based purely on the metadata title and short description prompt below."}
-                    {imageSource === "vision" && "Generates the image using the pre-analyzed visual description stored from when the postcard was uploaded."}
-                    {imageSource === "actual" && "First analyzes the actual postcard image using a multimodal Vision LLM to generate a detailed prompt, then feeds it to the image model for maximum visual accuracy."}
-                  </p>
+                  <div className="pd-preset-grid">
+                    {PRESETS.filter(p => {
+                      if (selectedMedium === "custom") return p.id === "custom";
+                      return p.type === selectedMedium && p.id !== "custom";
+                    }).map((p) => (
+                      <button
+                        key={p.id}
+                        className={`pd-preset-card ${selectedPreset === p.id ? "active" : ""}`}
+                        style={{
+                          borderColor: selectedPreset === p.id ? `var(--${selectedMedium === 'custom' ? 'black' : selectedMedium === 'text' ? 'primary' : selectedMedium})` : undefined
+                        }}
+                        onClick={() => {
+                          setSelectedPreset(p.id);
+                          setSelectedModel(""); 
+                          setCurrentOutput(null);
+                          setCurrentStep(3);
+                        }}
+                      >
+                        {savedAssets[p.id] && <div className="pd-preset-saved-dot" />}
+                        <span className={`pd-preset-badge pd-badge-${p.type}`}>{p.badge}</span>
+                        <div className="pd-preset-icon">{p.icon}</div>
+                        <span className="pd-preset-label">{p.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {activeType !== "image" && postcard.aiVisionResults && (
-                <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
-                  <input 
-                    type="checkbox" 
-                    id="inject-vision" 
-                    checked={injectVision} 
-                    onChange={(e) => setInjectVision(e.target.checked)}
-                    style={{ width: 16, height: 16 }}
-                  />
-                  <label htmlFor="inject-vision" style={{ fontSize: "0.85rem", color: "var(--grey-2)", cursor: "pointer" }}>
-                    Inject AI Vision metadata for accuracy
-                  </label>
+              {/* STEP 3: REFINE & GENERATE */}
+              {currentStep === 3 && (
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <p className="eop-label">Step 3: Refine & Run Creative AI</p>
+                    <button 
+                      onClick={() => setCurrentStep(2)} 
+                      style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: 4, color: "var(--grey-3)", background: "none", border: "none" }}
+                    >
+                      <ArrowLeft style={{ width: 12, height: 12 }} /> Back to Templates
+                    </button>
+                  </div>
+
+                  {/* Split Workspace Layout for direct feedback */}
+                  <div className={`pd-split-workspace ${savedAssets[selectedPreset] ? "has-saved" : ""}`}>
+                    
+                    {/* Saved Asset Panel (Direct comparison) */}
+                    {savedAssets[selectedPreset] && (
+                      <div className="pd-saved-preview-column">
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span className="pd-saved-preview-badge">Creations Vault (Saved)</span>
+                          <button
+                            className="pd-action-btn"
+                            style={{ padding: "4px 8px" }}
+                            onClick={() => handleDownload(savedAssets[selectedPreset].content, savedAssets[selectedPreset].type)}
+                          >
+                            <Download style={{ width: 10, height: 10 }} />
+                          </button>
+                        </div>
+                        
+                        <div className="pd-saved-preview-content">
+                          {savedAssets[selectedPreset].type === "image" ? (
+                            <img src={savedAssets[selectedPreset].content} alt="Previously generated" style={{ width: "100%", display: "block" }} />
+                          ) : savedAssets[selectedPreset].type === "audio" ? (
+                            <div style={{ padding: 12 }}>
+                              <p style={{ fontSize: "0.72rem", color: "var(--grey-3)", marginBottom: 8 }}>Saved audio narration</p>
+                              {/* Custom Waveform Player for Saved Audio */}
+                              <div className={`pd-waveform-player ${isPlaying ? 'playing' : ''}`} style={{ marginTop: 0, padding: 12 }}>
+                                <div className="pd-waveform-container" style={{ height: 32 }}>
+                                  {Array.from({ length: 35 }).map((_, idx) => {
+                                    const h = [20,30,45,60,80,70,50,40,65,85,95,75,55,60,80,90,70,50,65,85,75,55,45,30,20,40,60,75,90,80,60,45,30,20,10][idx];
+                                    const progressPercent = audioDuration > 0 ? (audioCurrentTime / audioDuration) * 100 : 0;
+                                    const isBarActive = (idx / 35) * 100 <= progressPercent;
+                                    return (
+                                      <div 
+                                        key={idx}
+                                        className={`pd-wave-bar ${isBarActive ? 'active' : ''}`}
+                                        style={{ height: `${h}%` }}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                                <div className="pd-waveform-controls">
+                                  <button 
+                                    className="pd-audio-play-btn" 
+                                    style={{ width: 28, height: 28 }}
+                                    onClick={() => togglePlayAudio(savedAssets[selectedPreset].content)}
+                                  >
+                                    {isPlaying ? <Pause style={{ width: 12, height: 12 }} /> : <Play style={{ width: 12, height: 12 }} />}
+                                  </button>
+                                  <span className="pd-audio-time-label" style={{ fontSize: "0.65rem" }}>
+                                    {audioDuration > 0 ? `${Math.floor(audioCurrentTime)}s / ${Math.floor(audioDuration)}s` : "0:00"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ) : savedAssets[selectedPreset].type === "video" ? (
+                            <video controls loop src={savedAssets[selectedPreset].content} style={{ width: "100%", display: "block" }} />
+                          ) : (
+                            <div style={{ padding: 16, maxHeight: 180, overflowY: "auto", fontSize: "0.82rem", color: "var(--grey-2)", whiteSpace: "pre-wrap", background: "white" }}>
+                              {savedAssets[selectedPreset].content}
+                            </div>
+                          )}
+                        </div>
+                        <p style={{ fontSize: "0.68rem", color: "var(--grey-3)", fontStyle: "italic", textAlign: "center" }}>
+                          Showing your previously saved output for this template.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Configuration & Input Column */}
+                    <div>
+                      {/* Model Selector */}
+                      <div className="pd-model-selector" style={{ padding: 16, background: "var(--grey-6)", borderRadius: 12, border: "1px solid var(--grey-5)", marginBottom: 16 }}>
+                        <div style={{ marginBottom: 12 }}>
+                          <label className="eop-field-label" style={{ marginBottom: 6, display: "block", fontSize: "0.7rem" }}>AI Model</label>
+                          <select 
+                            className="eop-input" 
+                            value={selectedModel} 
+                            onChange={(e) => setSelectedModel(e.target.value)}
+                            style={{ background: "white", width: "100%", marginBottom: 4 }}
+                          >
+                            <option value="">Recommended for {activePreset.badge}</option>
+                            {(activePreset.id === "custom" ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS] : (activePreset.type === "image" ? IMAGE_MODELS : (activePreset.type === "video" ? VIDEO_MODELS : TEXT_MODELS))).map(m => (
+                              <option key={m.id} value={m.id}>{m.name}</option>
+                            ))}
+                          </select>
+                          <p style={{ fontSize: "0.68rem", color: "var(--grey-3)", lineHeight: 1.3 }}>
+                            {selectedModel 
+                              ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS].find(m => m.id === selectedModel)?.description
+                              : `We'll pick the best ${activePreset.type === "image" ? "image" : (activePreset.type === "video" ? "video" : "text")} model for your selected provider.`}
+                          </p>
+                        </div>
+
+                        {selectedPreset === "custom" && (
+                          <div style={{ marginBottom: 12 }}>
+                            <label className="eop-field-label" style={{ marginBottom: 6, display: "block", fontSize: "0.7rem" }}>Output Format</label>
+                            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                              {(["text", "image", "audio", "video"] as AssetType[]).map(t => (
+                                <button 
+                                  key={t}
+                                  onClick={() => setCustomType(t)}
+                                  className="pd-action-btn"
+                                  style={{ flex: "1 1 calc(50% - 6px)", justifyContent: "center", background: customType === t ? "var(--grey-5)" : "white", padding: "4px 8px", fontSize: "0.7rem" }}
+                                >
+                                  {t === "video" ? "Video" : t.charAt(0).toUpperCase() + t.slice(1)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {activeType === "image" && (
+                          <div style={{ marginBottom: 12 }}>
+                            <label className="eop-field-label" style={{ marginBottom: 6, display: "block", fontSize: "0.7rem" }}>
+                              Image Input Source
+                            </label>
+                            <div style={{ display: "flex", gap: 6, flexDirection: "column" }}>
+                              <button 
+                                onClick={() => setImageSource("text")}
+                                className="pd-action-btn"
+                                style={{ 
+                                  justifyContent: "flex-start", 
+                                  padding: "8px 10px", 
+                                  background: imageSource === "text" ? "var(--grey-5)" : "white",
+                                  border: "1px solid var(--grey-4)",
+                                  fontSize: "0.75rem",
+                                  width: "100%"
+                                }}
+                              >
+                                <FileText style={{ width: 12, height: 12, marginRight: 6 }} />
+                                <span>Use Text Description</span>
+                              </button>
+                              {postcard.aiVisionResults && (
+                                <button 
+                                  onClick={() => setImageSource("vision")}
+                                  className="pd-action-btn"
+                                  style={{ 
+                                    justifyContent: "flex-start", 
+                                    padding: "8px 10px", 
+                                    background: imageSource === "vision" ? "var(--grey-5)" : "white",
+                                    border: "1px solid var(--grey-4)",
+                                    fontSize: "0.75rem",
+                                    width: "100%"
+                                  }}
+                                >
+                                  <ScanText style={{ width: 12, height: 12, marginRight: 6 }} />
+                                  <span>Use AI Vision Results</span>
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => setImageSource("actual")}
+                                className="pd-action-btn"
+                                style={{ 
+                                  justifyContent: "flex-start", 
+                                  padding: "8px 10px", 
+                                  background: imageSource === "actual" ? "var(--grey-5)" : "white",
+                                  border: "1px solid var(--grey-4)",
+                                  fontSize: "0.75rem",
+                                  width: "100%"
+                                }}
+                              >
+                                <ImageIcon style={{ width: 12, height: 12, marginRight: 6 }} />
+                                <span>Use Actual Image</span>
+                              </button>
+                            </div>
+
+                            {/* Scanner animation feedback when active */}
+                            {imageSource === "actual" && img && (
+                              <div className="pd-scanner-container">
+                                <div className="pd-scanner-line" />
+                                <div className="pd-scanner-overlay">
+                                  <span className="pd-scanner-dot" />
+                                  <span>Multimodal Scanner Active</span>
+                                </div>
+                                <img src={img} alt="Postcard to analyze" />
+                              </div>
+                            )}
+
+                            <p style={{ fontSize: "0.68rem", color: "var(--grey-3)", marginTop: 6, lineHeight: 1.3 }}>
+                              {imageSource === "text" && "Generates purely from metadata strings."}
+                              {imageSource === "vision" && "Generates from stored visual analysis description."}
+                              {imageSource === "actual" && "Feeds the original image to a Vision model to write an enriched prompt before rendering."}
+                            </p>
+                          </div>
+                        )}
+
+                        {activeType !== "image" && postcard.aiVisionResults && (
+                          <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                            <input 
+                              type="checkbox" 
+                              id="inject-vision" 
+                              checked={injectVision} 
+                              onChange={(e) => setInjectVision(e.target.checked)}
+                              style={{ width: 14, height: 14 }}
+                            />
+                            <label htmlFor="inject-vision" style={{ fontSize: "0.75rem", color: "var(--grey-2)", cursor: "pointer" }}>
+                              Inject AI Vision metadata for accuracy
+                            </label>
+                          </div>
+                        )}
+
+                        {/* Variables Injector List */}
+                        <div style={{ marginTop: 12 }}>
+                          <p className="pd-variables-title">Variables Helper</p>
+                          <div className="pd-variables-list">
+                            <button className="pd-var-chip" onClick={() => injectVariable("title")}>&#123;title&#125;</button>
+                            {postcard.description && <button className="pd-var-chip" onClick={() => injectVariable("description")}>&#123;desc&#125;</button>}
+                            <button className="pd-var-chip" onClick={() => injectVariable("latitude")}>&#123;lat&#125;</button>
+                            <button className="pd-var-chip" onClick={() => injectVariable("longitude")}>&#123;lng&#125;</button>
+                          </div>
+                        </div>
+
+                        {/* Prompt Area */}
+                        <div style={{ marginBottom: 12, marginTop: 12 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                            <label className="eop-field-label" style={{ fontSize: "0.7rem", margin: 0 }}>Prompt Blueprint</label>
+                            <button 
+                              className="pd-polish-btn" 
+                              disabled={isPolishing || !customPrompt.trim()}
+                              onClick={handlePolishPrompt}
+                              title="Rewrite draft prompt using AI for premium results"
+                            >
+                              {isPolishing ? (
+                                <><Loader2 style={{ width: 10, height: 10 }} className="animate-spin" /> Polishing...</>
+                              ) : (
+                                <><Wand2 style={{ width: 10, height: 10 }} /> Polish Prompt</>
+                              )}
+                            </button>
+                          </div>
+                          <textarea
+                            className="eop-input"
+                            placeholder="Draft your design directives or description here..."
+                            style={{ minHeight: 100, width: "100%", background: "white", resize: "vertical" }}
+                            value={customPrompt}
+                            onChange={(e) => setCustomPrompt(e.target.value)}
+                          />
+                        </div>
+
+                        <button
+                          className="eop-btn-primary pd-generate-btn"
+                          onClick={handleGenerate}
+                          disabled={isGenerating}
+                          style={{ width: "100%" }}
+                        >
+                          {isGenerating ? (
+                            <><Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> Processing...</>
+                          ) : (
+                            <><Sparkles style={{ width: 16, height: 16 }} /> Generate {selectedPreset === "custom" ? (customType === "video" ? "Video" : customType) : activePreset.label}</>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Step-by-Step Loader Checklist */}
+                      {isGenerating && (
+                        <div className="pd-loading-checklist">
+                          {getLoadingSteps(activeType).map((textStep, index) => {
+                            const stepNumber = index + 1;
+                            const isActive = loaderStep === stepNumber;
+                            const isCompleted = loaderStep > stepNumber;
+                            return (
+                              <div 
+                                key={index} 
+                                className={`pd-loading-checklist-item ${isActive ? "active" : ""} ${isCompleted ? "completed" : ""}`}
+                              >
+                                <div className="pd-loading-icon-wrap">
+                                  {isCompleted ? (
+                                    <Check style={{ width: 14, height: 14, color: "#2E7D32" }} />
+                                  ) : isActive ? (
+                                    <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" />
+                                  ) : (
+                                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--grey-4)" }} />
+                                  )}
+                                </div>
+                                <span>{textStep}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
                 </div>
               )}
-
-              <div style={{ marginBottom: 16 }}>
-                <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>Prompt</label>
-                <textarea
-                  className="eop-input"
-                  placeholder="Enter your prompt here..."
-                  style={{ minHeight: 120, width: "100%", background: "white", resize: "vertical" }}
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                />
-              </div>
-
-              <button
-                className="eop-btn-primary pd-generate-btn"
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                style={{ width: "100%" }}
-              >
-                {isGenerating ? (
-                  <><Loader2 style={{ width: 18, height: 18 }} className="animate-spin" /> {generationStatus || "Generating..."}</>
-                ) : (
-                  <><Sparkles style={{ width: 18, height: 18 }} /> Generate {selectedPreset === "custom" ? (customType === "video" ? "Video" : customType) : activePreset.label}</>
-                )}
-              </button>
             </div>
 
             {/* ── Output area ── */}
             {currentOutput && (
               <div className="pd-output">
                 <div className="pd-output-header">
-                  <span className="pd-output-label">Output</span>
+                  <span className="pd-output-label">Live Output Workspace</span>
                   <div className="pd-output-actions">
                     <button className="pd-action-btn" onClick={handleSave}>
-                      {justSaved ? <><Check style={{ width: 12, height: 12 }} /> Saved</> : <><Save style={{ width: 12, height: 12 }} /> Save</>}
+                      {justSaved ? <><Check style={{ width: 12, height: 12 }} /> Saved to Creations</> : <><Save style={{ width: 12, height: 12 }} /> Save to Creations</>}
                     </button>
                     <button className="pd-action-btn" onClick={() => handleDownload(currentOutput.content, currentOutput.type, currentOutput.audioBlob)}>
-                      <Download style={{ width: 12, height: 12 }} /> Download
+                      <Download style={{ width: 12, height: 12 }} /> Download File
                     </button>
                   </div>
                 </div>
@@ -721,7 +1102,10 @@ const PostcardDetail = () => {
                     <p>{currentOutput.content}</p>
                     <button
                       className="pd-copy-btn"
-                      onClick={() => navigator.clipboard.writeText(currentOutput.content)}
+                      onClick={() => {
+                        navigator.clipboard.writeText(currentOutput.content);
+                        toast({ title: "Copied to clipboard!", description: "Narrative text ready to paste." });
+                      }}
                     >
                       Copy text
                     </button>
@@ -729,11 +1113,35 @@ const PostcardDetail = () => {
                 ) : currentOutput.type === "image" ? (
                   <div className="pd-output-image">
                     <img src={currentOutput.content} alt="AI generated render" />
-                    <p className="pd-output-note">⚠ DALL-E image URLs expire after 1 hour. Download to keep.</p>
+                    <p className="pd-output-note">⚠ Temporary URL. Click 'Save' or download to preserve this render.</p>
                   </div>
                 ) : currentOutput.type === "audio" ? (
-                  <div className="pd-output-audio">
-                    <audio controls src={currentOutput.content} style={{ width: "100%" }} />
+                  <div className="pd-waveform-player playing">
+                    <div className="pd-waveform-container">
+                      {Array.from({ length: 35 }).map((_, idx) => {
+                        const h = [20,30,45,60,80,70,50,40,65,85,95,75,55,60,80,90,70,50,65,85,75,55,45,30,20,40,60,75,90,80,60,45,30,20,10][idx];
+                        const progressPercent = audioDuration > 0 ? (audioCurrentTime / audioDuration) * 100 : 0;
+                        const isBarActive = (idx / 35) * 100 <= progressPercent;
+                        return (
+                          <div 
+                            key={idx}
+                            className={`pd-wave-bar ${isBarActive ? 'active' : ''}`}
+                            style={{ height: `${h}%` }}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="pd-waveform-controls">
+                      <button 
+                        className="pd-audio-play-btn" 
+                        onClick={() => togglePlayAudio(currentOutput.content)}
+                      >
+                        {isPlaying ? <Pause style={{ width: 16, height: 16 }} /> : <Play style={{ width: 16, height: 16 }} />}
+                      </button>
+                      <span className="pd-audio-time-label">
+                        {audioDuration > 0 ? `${Math.floor(audioCurrentTime)}s / ${Math.floor(audioDuration)}s` : "0:00"}
+                      </span>
+                    </div>
                   </div>
                 ) : currentOutput.type === "video" ? (
                   <div className="pd-output-video">
