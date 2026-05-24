@@ -38,12 +38,25 @@ export async function loadAllPostcards(): Promise<Postcard[]> {
   }
 
   // 4. Final Merge: User data takes priority
-  const final = [...mergedSystem];
+  let final = [...mergedSystem];
   userPostcards.forEach(up => {
     const idx = final.findIndex(f => f.id === up.id);
     if (idx > -1) final[idx] = up;
     else final.push(up);
   });
+
+  // 5. Filter out deleted system postcards
+  const deletedStr = localStorage.getItem("geostories-deleted-postcards");
+  if (deletedStr) {
+    try {
+      const deletedIds = JSON.parse(deletedStr) as string[];
+      if (Array.isArray(deletedIds)) {
+        final = final.filter(f => !deletedIds.includes(f.id));
+      }
+    } catch (err) {
+      console.error("Failed to parse deleted postcards list", err);
+    }
+  }
 
   return final;
 }

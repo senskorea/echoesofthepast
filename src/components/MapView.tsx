@@ -20,7 +20,7 @@ const MapView = ({ postcards }: MapViewProps) => {
   const navigate = useNavigate();
 
   const SETUP_INSTRUCTIONS = `
-You are a setup assistant for GeoStories, an open-source interactive historical postcard mapping app.
+You are a setup assistant for Echoes of the Past, an open-source interactive historical postcard mapping app.
 Help the user complete the following configuration steps:
 
 ---
@@ -35,7 +35,7 @@ Help the user complete the following configuration steps:
   - (Optional) Places API for address lookups
 - Go to "APIs & Services" → "Credentials" → "Create Credentials" → "API key".
 - Copy the key and restrict it to "HTTP referrers" pointing to your domain (e.g. localhost:8080 for local dev).
-- Paste the key into the GeoStories API key prompt.
+- Paste the key into the Echoes of the Past API key prompt.
 
 ## 2. Supabase Project
 
@@ -329,7 +329,7 @@ Please guide me step by step through whichever part I need help with.
       <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10">
         <div className="vintage-card px-8 py-4 backdrop-blur-sm bg-card/95">
           <h1 className="font-heading text-3xl font-bold text-primary">
-            GeoStories
+            Echoes of the Past
           </h1>
           <p className="text-sm text-muted-foreground font-body mt-1">
             Mapping History, One Story at a Time

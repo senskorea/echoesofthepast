@@ -12,7 +12,7 @@ IMPORTANT INSTRUCTION: DO NOT give me all the steps at once. That is too overwhe
 
 Here are the configuration requirements:
 1. Zero-Docker AI: This works directly in the browser via API keys.
-2. AI Models: Gemini 3 Flash / 3.1 Pro / Imagen 4, or OpenAI GPT-4o / GPT Image 2.
+2. AI Models: Gemini 2.0 Flash / 1.5 Pro / Imagen 4, or OpenAI GPT-4o / DALL·E 3.
 3. Supabase: Requires Project URL and Anon key, and specifically a bucket named "postcards".
 4. Google Maps: Requires a Maps JavaScript API key restricted to localhost:8080.
 

@@ -64,12 +64,20 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
     }
   };
 
+  const { apiKey } = getAIConfig();
+
   return (
     <>
       {/* Floating Button */}
       {!isOpen && (
         <button 
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            if (!apiKey) {
+              alert("Please configure an AI provider API key in Settings to use the Smart Tutor.");
+              return;
+            }
+            setIsOpen(true);
+          }}
           style={{ 
             position: "fixed", 
             bottom: 32, 
@@ -112,7 +120,7 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
           {/* Header */}
           <div style={{ padding: "20px 24px", background: "var(--grey-1)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyCenter: "center" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <GraduationCap style={{ width: 20, height: 20 }} />
               </div>
               <div>

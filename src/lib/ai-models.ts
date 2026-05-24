@@ -20,8 +20,8 @@ export const TEXT_MODELS: AIModel[] = [
     description: "Cost-efficient, high-performance model. Efficient for scalable heritage tasks like metadata and narratives." 
   },
   { 
-    id: "o1-mini", 
-    name: "o1-mini", 
+    id: "o3-mini",
+    name: "o3-mini",
     provider: "openai", 
     description: "Advanced reasoning focused. Strong for intricate historical analysis and chronology reconstruction." 
   },
@@ -32,8 +32,8 @@ export const TEXT_MODELS: AIModel[] = [
     description: "Frontier-class speed. Excels at rapid, large-scale multimodal historical data extraction and storytelling." 
   },
   { 
-    id: "gemini-1.5-pro",
-    name: "Gemini 1.5 Pro",
+    id: "gemini-2.5-pro",
+    name: "Gemini 2.5 Pro",
     provider: "gemini", 
     description: "Advanced intelligence. Superior for deep, nuanced historical reasoning across vast multimodal sources." 
   },

@@ -155,16 +155,36 @@ const PostcardDetail = () => {
   const img = postcard?.imageUrl || postcard?.image_url || "";
   const images = [img, ...(postcard?.secondaryImages || [])].filter(Boolean) as string[];
 
-  const handleDownload = (content: string, type: AssetType, blob?: Blob) => {
-    if (type === "audio" && blob) {
-      const url = URL.createObjectURL(blob);
+  const handleDownload = async (content: string, type: AssetType, blob?: Blob) => {
+    if (type === "audio") {
+      const url = blob ? URL.createObjectURL(blob) : content; // fallback to base64 content if blob is missing
       const a = document.createElement("a");
       a.href = url;
       a.download = `eop-audio-${id}.mp3`;
       a.click();
       return;
     }
+
     const ext = type === "image" ? "png" : type === "video" ? "mp4" : "txt";
+
+    if (type === "image" && content.startsWith("http")) {
+      try {
+        const res = await fetch(content);
+        if (!res.ok) throw new Error("CORS or fetch failed");
+        const imageBlob = await res.blob();
+        const url = URL.createObjectURL(imageBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `eop-${type}-${id}.${ext}`;
+        a.click();
+        return;
+      } catch (err) {
+        // Fallback for CORS blocked DALL-E links
+        window.open(content, "_blank");
+        return;
+      }
+    }
+
     const a = document.createElement("a");
     a.href = content;
     a.download = `eop-${type}-${id}.${ext}`;

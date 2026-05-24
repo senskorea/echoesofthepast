@@ -40,7 +40,7 @@ export async function generateText(prompt: string, modelId: string, base64Image?
       body: JSON.stringify({ 
         model: modelId, 
         messages: [{ role: "user", content: messageContent }], 
-        ...(modelId.startsWith("o1") ? { max_completion_tokens: 2000 } : { max_tokens: 2000 })
+        ...((modelId.startsWith("o1") || modelId.startsWith("o3")) ? { max_completion_tokens: 2000 } : { max_tokens: 2000 })
       }),
     });
     if (!res.ok) { 

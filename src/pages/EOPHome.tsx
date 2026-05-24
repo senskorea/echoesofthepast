@@ -67,6 +67,18 @@ const EOPHome = () => {
     const updated = postcards.filter(c => c.id !== id);
     setPostcards(updated);
     localStorage.setItem("geostories-postcards", JSON.stringify(updated));
+
+    // Track deleted IDs so system default postcards don't reappear
+    try {
+      const deletedStr = localStorage.getItem("geostories-deleted-postcards");
+      const deletedIds = deletedStr ? JSON.parse(deletedStr) : [];
+      if (!deletedIds.includes(id)) {
+        deletedIds.push(id);
+        localStorage.setItem("geostories-deleted-postcards", JSON.stringify(deletedIds));
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleExportCard = (e: React.MouseEvent, card: Postcard) => {
@@ -206,7 +218,7 @@ const EOPHome = () => {
                     <div className="eop-card-body">
                       <p className="eop-card-label">
                         {card.latitude !== 0
-                          ? `${card.latitude.toFixed(2)}°N, ${card.longitude.toFixed(2)}°E`
+                          ? `${Math.abs(card.latitude).toFixed(2)}°${card.latitude >= 0 ? 'N' : 'S'}, ${Math.abs(card.longitude).toFixed(2)}°${card.longitude >= 0 ? 'E' : 'W'}`
                           : "Location unknown"}
                       </p>
                       <h3 className="eop-card-title">{card.title}</h3>

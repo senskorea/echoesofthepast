@@ -11,16 +11,26 @@ const LearnHub = () => {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [copied, setCopied] = useState(false);
   const [openTranscripts, setOpenTranscripts] = useState<Record<string, boolean>>({});
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, Record<number, number>>>({});
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, Record<number, number>>>(() => {
+    const saved = localStorage.getItem("eop-quiz-answers");
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { return {}; }
+    }
+    return {};
+  });
 
   const handleQuizSelect = (moduleId: string, qIndex: number, optionIndex: number) => {
-    setQuizAnswers(prev => ({
-      ...prev,
-      [moduleId]: {
-        ...(prev[moduleId] || {}),
-        [qIndex]: optionIndex
-      }
-    }));
+    setQuizAnswers(prev => {
+      const next = {
+        ...prev,
+        [moduleId]: {
+          ...(prev[moduleId] || {}),
+          [qIndex]: optionIndex
+        }
+      };
+      localStorage.setItem("eop-quiz-answers", JSON.stringify(next));
+      return next;
+    });
   };
 
   const handleClearAnswer = (moduleId: string, qIndex: number) => {
@@ -31,6 +41,7 @@ const LearnHub = () => {
         delete modAnswers[qIndex];
         next[moduleId] = modAnswers;
       }
+      localStorage.setItem("eop-quiz-answers", JSON.stringify(next));
       return next;
     });
   };
