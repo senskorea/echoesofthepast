@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Download, Trash2, Edit, MapPin, Search, X } from "lucide-react";
+import { Download, Trash2, Edit, MapPin, Search, X, Share2 } from "lucide-react";
 import MapView from "@/components/MapView";
 import ImportDialog from "@/components/ImportDialog";
 import { Postcard } from "@/types/postcard";
@@ -10,10 +10,12 @@ import { loadAllPostcards } from "@/lib/data-loader";
 import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import heroImg from "@/assets/eop_hero_premium.png";
+import { useToast } from "@/hooks/use-toast";
 
 type View = "gallery" | "map";
 
 const EOPHome = () => {
+  const { toast } = useToast();
   const { t } = useLanguage();
   const [activeView, setActiveView] = useState<View>("gallery");
   const [postcards, setPostcards] = useState<Postcard[]>([]);
@@ -98,6 +100,23 @@ const EOPHome = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleShareSpace = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Echoes of the Past",
+          url: url
+        });
+      } catch (err) {
+        console.error("Error sharing space:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      toast({ title: "Link Copied!", description: "The URL has been copied to your clipboard." });
+    }
+  };
+
   return (
     <div className="eop-root">
       {/* ── NAV ── */}
@@ -129,13 +148,20 @@ const EOPHome = () => {
 
       {/* ── TOGGLE BAR ── */}
       <div className="eop-toggle-bar">
-        <div className="eop-toggle-left">
+        <div className="eop-toggle-left" style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <h2 className="eop-section-title">Geostories</h2>
           <span className="eop-count">
             {searchQuery.trim()
               ? `${filteredPostcards.length} of ${postcards.length} found`
               : `${postcards.length} entries`}
           </span>
+          <button
+            className="eop-btn-outline"
+            style={{ padding: "6px 12px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 6 }}
+            onClick={handleShareSpace}
+          >
+            <Share2 style={{ width: 14, height: 14 }} /> Share
+          </button>
         </div>
         <div className="eop-toggle-search">
           <div className="eop-toggle-search-wrapper">

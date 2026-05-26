@@ -594,10 +594,99 @@ Une fois de plus, nous tenons à souligner que même si l'IA peut aider à accé
   {
     id: "module-5",
     number: 5,
-    title: "Case Studies",
-    shortDesc: "Real-world success stories and inspiration for your own digital heritage projects.",
-    lessons: [],
-    quiz: []
+    title: "From Archive to Dialogue",
+    shortDesc: "Turning preserved heritage into experiences people can watch, hear, follow and explore.",
+    videoUrl: "https://youtu.be/2FvY6Br1QfE",
+    transcript: `So hello and welcome to our final module module five from archive to dialogue turning preserved heritage into experiences people can watch here follow and explore. So this module is essentially about summarizing and bringing everything together as well as providing an overview of the platform in action. So obviously the vision of this project has been from moving from preserving existing content, replicating it digitally to then transform it by leveraging the power of AI to sometimes even create brand new formats such as video, sounds, stories or maps and essentially breathing new life into them. And this is all in an objective of safeguarding and keeping history and also helping younger generations connect with their heritage.
+
+So our platform essentially takes an original source and using AI is able to enhance it in multiple ways. So, what I'd like to do now is to take you through uh some of the platform features and give an overview of our platform in action.
+
+So, this is uh as you know what our platform looks like. So, we have a few features uh I'd like to highlight. So this is the uh geo stories space where you have uh a gridlike interface but you also have a map where you can see the postcards location. We also have a search field where you can type in terms to help you narrow down the selection of content. We also have a chatbot where you can ask questions to help you understand some of the historical context or some of the technologies used to power the platform.
+
+Then we have the learn space which is where as you know you'll find the different modules. We also have the settings space where you can configure the platform. So let us now take a look at the individual postcards. So we have the edit button, the download button that allows you to save the postcards content and to potentially share it and the delete button. So now we have the AI studio space which is where you can generate content. Uh and we also have a description space uh including the location of the postcard and the title. And under here we have the creative space which is where the content generated can be saved uh for future reference or downloaded. So let us now take a quick look at the different content generation options. So the first step is to choose what kind of content you want to generate. Is it going to be text, image, audio, video or custom? So note that depending on the content generated, there may be more or less cost generated. Typically text uh would be the cheapest type of content with video being the most expensive.
+
+And as well we have a custom button which allows you to generate uh and gain more control on the final um content generation or prompt. So clicking text for example we then have templates where you have uh precreated templates uh which help you um shape the final content created. So, we're going to select, for example, a time capsule. And here we can see exactly uh the the previously saved output for this template. And here we have variables taken from the the original upload of the picture uh and the original AI uh rendition of that content. Uh so looking at the different variables we can customize the prompt if we want to do so and then finally we can click generate uh the content to see the result which would appear here and which could be saved under in the creative space.
+
+So here we have the generated content and as we can see it's created a time capsule like story uh which we can download or save and as it will be saved we'll be able to consult it at later time in the creative space.
+
+So that was an overview of the platform and the different capabilities. So we're just scratching the surface and it's up to you the archavist and the user to really find out how far and what capabilities our AI carry. So through this project you'll also have enhanced your skill set. Uh this includes using AI through improving and understanding some of the mechanics of writing prompts but also enhancing your critical thinking by uh helping you check AI's outputs and helping you understand that sometimes AI can make mistakes or hallucinate. to essentially create uh content which doesn't relate to the original asset. Uh and also as well this project will have helped you in terms of organizing records. Uh and as also in terms of helping you share and enhance your public communication skills. Maybe this will be through presenting some of your uh generated content in a workshop or through sharing this on social network. And finally and very importantly, this project will have helped you connect with history. It might be your local community or it might be um a culture different from yours and far away. And it will help you connect with the people in the postcards or the context, historical context of that said postcard and help you reflect on um the even in terms of um the history and how far we've come in terms of um technology.
+
+And so AI overall uh as you'll find out will help in terms of productivity and creating new content. AI's role is essentially to suggest uh but your role and you must always be aware that uh you are essentially confirming what AI is doing. So your role is to confirm and to finally approve the generated content. Ideally, when uh looking and uploading an asset or uh a postcard, you would look at making sure that things such as name, dates, place uh are as accurate and possible and that the content described fits what you see and uh what the what knowledge you have as a human over time fits with what AI I is suggesting. And so in our project, we strongly encourage you to try and share the content you've created or the uh history you've unraveled or discovered. Uh this can be in uh your local community, things like libraries, schools, local groups, youth clubs, or museums. Or it can be online uh on our platform by taking screenshots and sharing it on social media. or it can be through an online exhibit or uh another source which we might not even have considered. So try and publish your content, explain where it comes from, invite feedback and also try and respect uh the original context uh for that said postcard. So the past does not speak for itself. So we help it uh speak by using care, evidence and imagination uh in order to make sure that our future is preserved. AI is a tool. You give it purpose, judgment and most importantly humanity. Thank you.`,
+    lessons: [
+      {
+        title: "Platform Overview",
+        content: "We provide an overview of the platform in action. The vision of this project is moving from simply preserving existing content digitally, to transforming it by leveraging the power of AI to create brand new formats—video, sound, stories, or maps—essentially breathing new life into historical records."
+      },
+      {
+        title: "AI Studio & Content Generation",
+        content: "The AI Studio allows you to generate text, images, audio, video, or custom content. Remember that different formats carry different computing costs (text is typically cheapest, video most expensive). The Creative Space allows you to save and reference your generated content for future use."
+      },
+      {
+        title: "Critical Thinking and Human Oversight",
+        content: "AI is a tool designed to suggest, but the human archivist must always remain in charge. Your role is to confirm and approve generated content, making sure that names, dates, and locations are as accurate as possible, while recognizing that AI can make mistakes or hallucinate."
+      },
+      {
+        title: "Sharing Your Discoveries",
+        content: "We strongly encourage you to share the history you've unraveled. This can be locally (libraries, schools, youth clubs, museums) or online via social media or exhibits. When you publish your content, always explain where it comes from, invite feedback, and respect the original context of the postcard."
+      }
+    ],
+    quiz: [
+      {
+        question: "What is the primary vision of the platform according to the module?",
+        options: [
+          "To securely lock away historical artifacts from public view.",
+          "To move from preserving existing content digitally to transforming it using AI to create new formats.",
+          "To replace human archivists entirely with automated systems.",
+          "To sell physical postcards online."
+        ],
+        correctAnswer: 1,
+        explanation: "The vision is to move from preserving content to transforming it into brand new formats (video, sounds, stories, maps) by leveraging AI."
+      },
+      {
+        question: "Which type of AI content generation is typically the most computationally expensive?",
+        options: [
+          "Text",
+          "Audio",
+          "Video",
+          "Image"
+        ],
+        correctAnswer: 2,
+        explanation: "The module explicitly notes that text is typically the cheapest type of content to generate, while video is the most expensive."
+      },
+      {
+        question: "What is the primary role of the human user when using AI on the platform?",
+        options: [
+          "To blindly accept all AI outputs without question.",
+          "To confirm, verify, and approve the generated content.",
+          "To write all the code for the AI models.",
+          "To only use the platform for translating languages."
+        ],
+        correctAnswer: 1,
+        explanation: "AI's role is to suggest, but the human archivist's role is to confirm and approve the content, ensuring historical accuracy."
+      },
+      {
+        question: "What should you do if an AI model hallucinates or generates incorrect content?",
+        options: [
+          "Publish it immediately to social media.",
+          "Delete the original postcard asset entirely.",
+          "Use critical thinking to identify the mistake and adjust or reject the output.",
+          "Assume the AI knows better than human historical records."
+        ],
+        correctAnswer: 2,
+        explanation: "The module highlights the importance of enhancing critical thinking by checking AI outputs and understanding that AI can make mistakes."
+      },
+      {
+        question: "According to the module, how can you share the historical content you have unraveled?",
+        options: [
+          "By keeping it strictly on your personal hard drive.",
+          "By sharing it locally at libraries and schools, or online via social media and exhibits.",
+          "By only showing it to professional historians.",
+          "By sending it exclusively through printed mail."
+        ],
+        correctAnswer: 1,
+        explanation: "The video strongly encourages sharing your discoveries locally in your community or online through screenshots, social media, and digital exhibits."
+      }
+    ]
   }
 ];
 

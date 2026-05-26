@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Loader2, Download, Save, Volume2, ImageIcon, FileText, Pencil, BookOpen, Mail, Clapperboard, Check, FileJson, Sparkles, ScanText, HeartPulse, Lightbulb, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, MapPin, Loader2, Download, Save, Volume2, ImageIcon, FileText, Pencil, BookOpen, Mail, Clapperboard, Check, FileJson, Sparkles, ScanText, HeartPulse, Lightbulb, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import mockData from "@/data/mock-data.json";
 import { Postcard } from "@/types/postcard";
 import { getAIConfig } from "@/lib/supabase-config";
@@ -148,6 +148,9 @@ const PostcardDetail = () => {
 
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
+
+  const [studioStep, setStudioStep] = useState<1 | 2 | 3>(1);
+  const [selectedMedium, setSelectedMedium] = useState<AssetType | "custom" | "">("");
 
   const activePreset = PRESETS.find(p => p.id === selectedPreset) || PRESETS[0];
   const activeType = activePreset.id === "custom" ? customType : activePreset.type;
@@ -396,6 +399,24 @@ const PostcardDetail = () => {
     toast({ title: "Exported ✓", description: "All assets and metadata bundled into JSON." });
   };
 
+  const handleShare = async () => {
+    if (!postcard) return;
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: postcard.title,
+          url: url
+        });
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      toast({ title: "Link Copied!", description: "The URL has been copied to your clipboard." });
+    }
+  };
+
   if (!postcard) {
     return (
       <div className="eop-root" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -510,13 +531,22 @@ const PostcardDetail = () => {
               )}
             </div>
 
-            <button 
-              onClick={handleExport}
-              className="pd-action-btn" 
-              style={{ marginTop: 20, width: "100%", justifyContent: "center", padding: 12 }}
-            >
-              <Download style={{ width: 14, height: 14 }} /> Export This Story (JSON Bundle)
-            </button>
+            <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
+              <button
+                onClick={handleShare}
+                className="pd-action-btn"
+                style={{ flex: 1, justifyContent: "center", padding: 12 }}
+              >
+                <Share2 style={{ width: 14, height: 14 }} /> Share
+              </button>
+              <button
+                onClick={handleExport}
+                className="pd-action-btn"
+                style={{ flex: 1, justifyContent: "center", padding: 12 }}
+              >
+                <Download style={{ width: 14, height: 14 }} /> Export JSON
+              </button>
+            </div>
 
             {postcard.aiVisionResults && (
               <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -611,169 +641,270 @@ const PostcardDetail = () => {
             <p className="eop-label">AI Studio</p>
             <h2 className="pd-studio-title">Generate Content</h2>
 
-            {/* Preset grid */}
-            <div className="pd-preset-grid">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  className={`pd-preset-card ${selectedPreset === p.id ? "active" : ""}`}
-                  onClick={() => {
-                    setSelectedPreset(p.id);
-                    setSelectedModel(""); // Reset model to show compatible ones
-                    setCurrentOutput(null);
-                  }}
-                >
-                  {savedAssets[p.id] && <div className="pd-preset-saved-dot" />}
-                  <span className={`pd-preset-badge pd-badge-${p.type}`}>{p.badge}</span>
-                  <div className="pd-preset-icon">{p.icon}</div>
-                  <span className="pd-preset-label">{p.label}</span>
-                </button>
-              ))}
+            {/* Stepper Progress */}
+            <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--grey-5)", borderRadius: 12, overflow: "hidden", marginBottom: 24, fontSize: "0.8rem", fontWeight: 600 }}>
+              <div
+                onClick={() => setStudioStep(1)}
+                style={{ flex: 1, padding: "12px 16px", background: studioStep === 1 ? "var(--grey-6)" : "white", color: studioStep === 1 ? "var(--grey-1)" : "var(--grey-3)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer", borderRight: "1px solid var(--grey-5)" }}
+              >
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: studioStep === 1 ? "var(--grey-1)" : "var(--grey-4)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem" }}>1</div>
+                1. MEDIUM
+              </div>
+              <div
+                onClick={() => setStudioStep(2)}
+                style={{ flex: 1, padding: "12px 16px", background: studioStep === 2 ? "var(--grey-6)" : "white", color: studioStep >= 2 ? "var(--grey-1)" : "var(--grey-3)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: studioStep >= 2 ? "pointer" : "default", borderRight: "1px solid var(--grey-5)", pointerEvents: studioStep >= 2 ? "auto" : "none" }}
+              >
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: studioStep >= 2 ? "var(--grey-1)" : "var(--grey-4)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem" }}>2</div>
+                2. TEMPLATE
+              </div>
+              <div
+                onClick={() => setStudioStep(3)}
+                style={{ flex: 1, padding: "12px 16px", background: studioStep === 3 ? "var(--grey-6)" : "white", color: studioStep === 3 ? "var(--grey-1)" : "var(--grey-3)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: studioStep === 3 ? "pointer" : "default", pointerEvents: studioStep === 3 ? "auto" : "none" }}
+              >
+                <div style={{ width: 20, height: 20, borderRadius: "50%", background: studioStep === 3 ? "var(--grey-1)" : "var(--grey-4)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem" }}>3</div>
+                3. REFINE
+              </div>
             </div>
 
-            {/* Model Selector & Options (Dependent on Preset) */}
-            <div className="pd-model-selector" style={{ marginBottom: 24, padding: 20, background: "var(--grey-6)", borderRadius: 12, border: "1px solid var(--grey-5)" }}>
-              <p className="eop-label" style={{ marginBottom: 12 }}>Step 2: Configure & Generate</p>
-              
-              <div style={{ marginBottom: 16 }}>
-                <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>AI Model</label>
-                <select 
-                  className="eop-input" 
-                  value={selectedModel} 
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  style={{ background: "white", width: "100%", marginBottom: 6 }}
-                >
-                  <option value="">Recommended for {activePreset.badge}</option>
-                  {(activePreset.id === "custom" ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS] : (activePreset.type === "image" ? IMAGE_MODELS : (activePreset.type === "video" ? VIDEO_MODELS : TEXT_MODELS))).map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
-                <p style={{ fontSize: "0.7rem", color: "var(--grey-3)", lineHeight: 1.4 }}>
-                  {selectedModel 
-                    ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS].find(m => m.id === selectedModel)?.description
-                    : `We'll pick the best ${activePreset.type === "image" ? "image" : (activePreset.type === "video" ? "video" : "text")} model for your selected provider.`}
-                </p>
-              </div>
-
-              {selectedPreset === "custom" && (
-                <div style={{ marginBottom: 16 }}>
-                  <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>Output Format</label>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {(["text", "image", "audio", "video"] as AssetType[]).map(t => (
-                      <button 
-                        key={t}
-                        onClick={() => setCustomType(t)}
+            {/* Step 1: Select Output Medium */}
+            {studioStep === 1 && (
+              <div>
+                <p className="eop-label" style={{ marginBottom: 16 }}>Step 1: Select Output Medium</p>
+                <div style={{ display: "flex", gap: 12 }}>
+                  {[
+                    { id: "text", label: "Text", icon: <FileText style={{ width: 24, height: 24, marginBottom: 8 }} /> },
+                    { id: "image", label: "Image", icon: <ImageIcon style={{ width: 24, height: 24, marginBottom: 8 }} /> },
+                    { id: "audio", label: "Audio", icon: <Volume2 style={{ width: 24, height: 24, marginBottom: 8 }} /> },
+                    { id: "video", label: "Video", icon: <Clapperboard style={{ width: 24, height: 24, marginBottom: 8 }} /> },
+                    { id: "custom", label: "Custom", icon: <Pencil style={{ width: 24, height: 24, marginBottom: 8 }} /> }
+                  ].map(medium => {
+                    const isSelected = selectedMedium === medium.id;
+                    return (
+                      <button
+                        key={medium.id}
                         className="pd-action-btn"
-                        style={{ flex: "1 1 calc(50% - 8px)", justifyContent: "center", background: customType === t ? "var(--grey-5)" : "white" }}
+                        style={{
+                          flex: 1,
+                          height: 90,
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          gap: 4,
+                          border: isSelected ? "1px solid #3b82f6" : "1px solid var(--grey-5)",
+                          background: isSelected ? "#eff6ff" : "white",
+                          color: isSelected ? "#3b82f6" : "var(--grey-1)",
+                          borderRadius: 12,
+                          transition: "all 0.2s ease"
+                        }}
+                        onClick={() => {
+                          setSelectedMedium(medium.id as AssetType | "custom");
+                          if (medium.id === "custom") {
+                            setSelectedPreset("custom");
+                          } else {
+                            const firstCompatible = PRESETS.find(p => p.type === medium.id && p.id !== "custom");
+                            if (firstCompatible) setSelectedPreset(firstCompatible.id);
+                          }
+                          setStudioStep(2);
+                        }}
                       >
-                        {t === "video" ? "Video" : t.charAt(0).toUpperCase() + t.slice(1)}
+                        {medium.icon}
+                        <span style={{ fontWeight: 600, fontSize: "0.85rem" }}>{medium.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Select Template */}
+            {studioStep === 2 && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <p className="eop-label">Step 2: Select a Template</p>
+                  <button className="pd-action-btn" style={{ padding: "6px 12px" }} onClick={() => setStudioStep(1)}>
+                    <ChevronLeft style={{ width: 14, height: 14 }} /> Back
+                  </button>
+                </div>
+
+                {selectedMedium === "custom" ? (
+                  <div style={{ padding: 24, background: "var(--grey-6)", borderRadius: 12, border: "1px solid var(--grey-5)", textAlign: "center" }}>
+                    <p style={{ fontWeight: 600, marginBottom: 8 }}>Custom Generation</p>
+                    <p style={{ fontSize: "0.85rem", color: "var(--grey-3)", marginBottom: 16 }}>Skip presets and write your own completely custom prompt from scratch.</p>
+                    <button className="eop-btn-primary" onClick={() => setStudioStep(3)}>Continue to Refine</button>
+                  </div>
+                ) : (
+                  <div className="pd-preset-grid">
+                    {PRESETS.filter(p => p.type === selectedMedium && p.id !== "custom").map((p) => (
+                      <button
+                        key={p.id}
+                        className={`pd-preset-card ${selectedPreset === p.id ? "active" : ""}`}
+                        onClick={() => {
+                          setSelectedPreset(p.id);
+                          setSelectedModel("");
+                          setCurrentOutput(null);
+                          setStudioStep(3);
+                        }}
+                      >
+                        {savedAssets[p.id] && <div className="pd-preset-saved-dot" />}
+                        <span className={`pd-preset-badge pd-badge-${p.type}`}>{p.badge}</span>
+                        <div className="pd-preset-icon">{p.icon}</div>
+                        <span className="pd-preset-label">{p.label}</span>
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            )}
 
-              {activeType === "image" && (
+            {/* Step 3: Refine & Generate */}
+            {studioStep === 3 && (
+              <div className="pd-model-selector" style={{ padding: 20, background: "var(--grey-6)", borderRadius: 12, border: "1px solid var(--grey-5)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <p className="eop-label">Step 3: Configure & Generate</p>
+                  <button className="pd-action-btn" style={{ padding: "6px 12px" }} onClick={() => setStudioStep(2)}>
+                    <ChevronLeft style={{ width: 14, height: 14 }} /> Back
+                  </button>
+                </div>
+
                 <div style={{ marginBottom: 16 }}>
-                  <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>
-                    Image Input Source
-                  </label>
-                  <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
-                    <button 
-                      onClick={() => setImageSource("text")}
-                      className="pd-action-btn"
-                      style={{ 
-                        justifyContent: "flex-start", 
-                        padding: "10px 12px", 
-                        background: imageSource === "text" ? "var(--grey-5)" : "white",
-                        border: "1px solid var(--grey-4)",
-                        fontSize: "0.85rem",
-                        width: "100%"
-                      }}
-                    >
-                      <FileText style={{ width: 14, height: 14, marginRight: 8 }} />
-                      <span>Use Text Description (Title & Short Description)</span>
-                    </button>
-                    {postcard.aiVisionResults && (
+                  <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>AI Model</label>
+                  <select
+                    className="eop-input"
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    style={{ background: "white", width: "100%", marginBottom: 6 }}
+                  >
+                    <option value="">Recommended for {activePreset.badge}</option>
+                    {(activePreset.id === "custom" ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS] : (activePreset.type === "image" ? IMAGE_MODELS : (activePreset.type === "video" ? VIDEO_MODELS : TEXT_MODELS))).map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                  <p style={{ fontSize: "0.7rem", color: "var(--grey-3)", lineHeight: 1.4 }}>
+                    {selectedModel
+                      ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS].find(m => m.id === selectedModel)?.description
+                      : `We'll pick the best ${activePreset.type === "image" ? "image" : (activePreset.type === "video" ? "video" : "text")} model for your selected provider.`}
+                  </p>
+                </div>
+
+                {selectedPreset === "custom" && (
+                  <div style={{ marginBottom: 16 }}>
+                    <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>Asset Type</label>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {(["text", "image", "audio", "video"] as AssetType[]).map(t => (
+                        <button
+                          key={t}
+                          onClick={() => setCustomType(t)}
+                          className="pd-action-btn"
+                          style={{ flex: "1 1 calc(50% - 8px)", justifyContent: "center", background: customType === t ? "var(--grey-5)" : "white" }}
+                        >
+                          {t === "video" ? "Video" : t.charAt(0).toUpperCase() + t.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {activeType === "image" && (
+                  <div style={{ marginBottom: 16 }}>
+                    <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>
+                      Image Input Source
+                    </label>
+                    <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
                       <button 
-                        onClick={() => setImageSource("vision")}
+                        onClick={() => setImageSource("text")}
                         className="pd-action-btn"
                         style={{ 
                           justifyContent: "flex-start", 
                           padding: "10px 12px", 
-                          background: imageSource === "vision" ? "var(--grey-5)" : "white",
+                          background: imageSource === "text" ? "var(--grey-5)" : "white",
                           border: "1px solid var(--grey-4)",
                           fontSize: "0.85rem",
                           width: "100%"
                         }}
                       >
-                        <ScanText style={{ width: 14, height: 14, marginRight: 8 }} />
-                        <span>Use AI Vision Results (Pre-analyzed Description)</span>
+                        <FileText style={{ width: 14, height: 14, marginRight: 8 }} />
+                        <span>Use Text Description (Title & Short Description)</span>
                       </button>
-                    )}
-                    <button 
-                      onClick={() => setImageSource("actual")}
-                      className="pd-action-btn"
-                      style={{ 
-                        justifyContent: "flex-start", 
-                        padding: "10px 12px", 
-                        background: imageSource === "actual" ? "var(--grey-5)" : "white",
-                        border: "1px solid var(--grey-4)",
-                        fontSize: "0.85rem",
-                        width: "100%"
-                      }}
-                    >
-                      <ImageIcon style={{ width: 14, height: 14, marginRight: 8 }} />
-                      <span>Use Actual Image (Sends original image to Vision AI to guide creation)</span>
-                    </button>
+                      {postcard.aiVisionResults && (
+                        <button
+                          onClick={() => setImageSource("vision")}
+                          className="pd-action-btn"
+                          style={{
+                            justifyContent: "flex-start",
+                            padding: "10px 12px",
+                            background: imageSource === "vision" ? "var(--grey-5)" : "white",
+                            border: "1px solid var(--grey-4)",
+                            fontSize: "0.85rem",
+                            width: "100%"
+                          }}
+                        >
+                          <ScanText style={{ width: 14, height: 14, marginRight: 8 }} />
+                          <span>Use AI Vision Results (Pre-analyzed Description)</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setImageSource("actual")}
+                        className="pd-action-btn"
+                        style={{
+                          justifyContent: "flex-start",
+                          padding: "10px 12px",
+                          background: imageSource === "actual" ? "var(--grey-5)" : "white",
+                          border: "1px solid var(--grey-4)",
+                          fontSize: "0.85rem",
+                          width: "100%"
+                        }}
+                      >
+                        <ImageIcon style={{ width: 14, height: 14, marginRight: 8 }} />
+                        <span>Use Actual Image (Sends original image to Vision AI to guide creation)</span>
+                      </button>
+                    </div>
+                    <p style={{ fontSize: "0.7rem", color: "var(--grey-3)", marginTop: 6, lineHeight: 1.4 }}>
+                      {imageSource === "text" && "Generates the image based purely on the metadata title and short description prompt below."}
+                      {imageSource === "vision" && "Generates the image using the pre-analyzed visual description stored from when the postcard was uploaded."}
+                      {imageSource === "actual" && "First analyzes the actual postcard image using a multimodal Vision LLM to generate a detailed prompt, then feeds it to the image model for maximum visual accuracy."}
+                    </p>
                   </div>
-                  <p style={{ fontSize: "0.7rem", color: "var(--grey-3)", marginTop: 6, lineHeight: 1.4 }}>
-                    {imageSource === "text" && "Generates the image based purely on the metadata title and short description prompt below."}
-                    {imageSource === "vision" && "Generates the image using the pre-analyzed visual description stored from when the postcard was uploaded."}
-                    {imageSource === "actual" && "First analyzes the actual postcard image using a multimodal Vision LLM to generate a detailed prompt, then feeds it to the image model for maximum visual accuracy."}
-                  </p>
-                </div>
-              )}
-
-              {activeType !== "image" && postcard.aiVisionResults && (
-                <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
-                  <input 
-                    type="checkbox" 
-                    id="inject-vision" 
-                    checked={injectVision} 
-                    onChange={(e) => setInjectVision(e.target.checked)}
-                    style={{ width: 16, height: 16 }}
-                  />
-                  <label htmlFor="inject-vision" style={{ fontSize: "0.85rem", color: "var(--grey-2)", cursor: "pointer" }}>
-                    Inject AI Vision metadata for accuracy
-                  </label>
-                </div>
-              )}
-
-              <div style={{ marginBottom: 16 }}>
-                <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>Prompt</label>
-                <textarea
-                  className="eop-input"
-                  placeholder="Enter your prompt here..."
-                  style={{ minHeight: 120, width: "100%", background: "white", resize: "vertical" }}
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                />
-              </div>
-
-              <button
-                className="eop-btn-primary pd-generate-btn"
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                style={{ width: "100%" }}
-              >
-                {isGenerating ? (
-                  <><Loader2 style={{ width: 18, height: 18 }} className="animate-spin" /> {generationStatus || "Generating..."}</>
-                ) : (
-                  <><Sparkles style={{ width: 18, height: 18 }} /> Generate {selectedPreset === "custom" ? (customType === "video" ? "Video" : customType) : activePreset.label}</>
                 )}
-              </button>
-            </div>
+
+                {activeType !== "image" && postcard.aiVisionResults && (
+                  <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
+                    <input
+                      type="checkbox"
+                      id="inject-vision"
+                      checked={injectVision}
+                      onChange={(e) => setInjectVision(e.target.checked)}
+                      style={{ width: 16, height: 16 }}
+                    />
+                    <label htmlFor="inject-vision" style={{ fontSize: "0.85rem", color: "var(--grey-2)", cursor: "pointer" }}>
+                      Inject AI Vision metadata for accuracy
+                    </label>
+                  </div>
+                )}
+
+                <div style={{ marginBottom: 16 }}>
+                  <label className="eop-field-label" style={{ marginBottom: 8, display: "block", fontSize: "0.7rem" }}>Prompt</label>
+                  <textarea
+                    className="eop-input"
+                    placeholder="Enter your prompt here..."
+                    style={{ minHeight: 120, width: "100%", background: "white", resize: "vertical" }}
+                    value={customPrompt}
+                    onChange={(e) => setCustomPrompt(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  className="eop-btn-primary pd-generate-btn"
+                  onClick={handleGenerate}
+                  disabled={isGenerating}
+                  style={{ width: "100%" }}
+                >
+                  {isGenerating ? (
+                    <><Loader2 style={{ width: 18, height: 18 }} className="animate-spin" /> {generationStatus || "Generating..."}</>
+                  ) : (
+                    <><Sparkles style={{ width: 18, height: 18 }} /> Generate {selectedPreset === "custom" ? (customType === "video" ? "Video" : customType) : activePreset.label}</>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* ── Output area ── */}
             {currentOutput && (
