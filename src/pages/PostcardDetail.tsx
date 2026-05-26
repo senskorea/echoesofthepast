@@ -146,6 +146,9 @@ const PostcardDetail = () => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [generationStatus, setGenerationStatus] = useState("");
 
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+
   const activePreset = PRESETS.find(p => p.id === selectedPreset) || PRESETS[0];
   const activeType = activePreset.id === "custom" ? customType : activePreset.type;
   const { provider } = getAIConfig();
@@ -458,6 +461,55 @@ const PostcardDetail = () => {
             {postcard.description && (
               <p className="pd-description">{postcard.description}</p>
             )}
+
+            <div style={{ marginTop: 16 }}>
+              {!isEditingNote ? (
+                <button
+                  className="pd-action-btn"
+                  style={{ width: "100%", justifyContent: "center", padding: 8, background: "var(--grey-6)" }}
+                  onClick={() => {
+                    const existing = savedAssets["user_notes"];
+                    setNoteDraft(existing ? existing.content : "");
+                    setIsEditingNote(true);
+                  }}
+                >
+                  <Pencil style={{ width: 14, height: 14 }} /> {savedAssets["user_notes"] ? "Edit Notes" : "Add Notes"}
+                </button>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <textarea
+                    className="eop-input"
+                    rows={4}
+                    placeholder="Type your notes here..."
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    style={{ resize: "vertical" }}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      className="eop-btn-primary"
+                      style={{ flex: 1, padding: "8px" }}
+                      onClick={() => {
+                        const data = { type: "text" as AssetType, content: noteDraft };
+                        localStorage.setItem(assetKey(id, "user_notes"), JSON.stringify(data));
+                        setSavedAssets(prev => ({ ...prev, user_notes: data }));
+                        setIsEditingNote(false);
+                      }}
+                    >
+                      Save Notes
+                    </button>
+                    <button
+                      className="pd-action-btn"
+                      style={{ padding: "8px 16px" }}
+                      onClick={() => setIsEditingNote(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button 
               onClick={handleExport}
               className="pd-action-btn" 
@@ -512,7 +564,9 @@ const PostcardDetail = () => {
                       >
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                           {isCollapsed ? <ChevronDown style={{ width: 16, height: 16, color: "var(--grey-3)" }} /> : <ChevronUp style={{ width: 16, height: 16, color: "var(--grey-3)" }} />}
-                          <span className="pd-output-label" style={{ fontWeight: 600, color: "var(--grey-1)" }}>{preset?.label || "Custom Generation"}</span>
+                          <span className="pd-output-label" style={{ fontWeight: 600, color: "var(--grey-1)" }}>
+                            {presetId === "user_notes" ? "My Notes" : (preset?.label || "Custom Generation")}
+                          </span>
                         </div>
                         <button
                           className="pd-action-btn"
