@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { generateText, generateImage, generateAudio, generateVideo, pollVideoOperation } from "@/lib/ai-service";
 import { loadAllPostcards } from "@/lib/data-loader";
+import SEO from "@/components/SEO";
 
 // ── Preset definitions ────────────────────────────────────────
 type AssetType = "text" | "image" | "audio" | "video";
@@ -531,6 +532,12 @@ const PostcardDetail = () => {
 
   return (
     <div className="eop-root">
+      <SEO
+        title={`${postcard.title} - Historical Postcard & Story`}
+        description={postcard.description || `Explore historical postcard ${postcard.title} with AI story narration, renders, and time capsule letters.`}
+        canonicalUrl={`https://geostories.eu/postcards/${postcard.id}`}
+        ogImage={postcard.image_url}
+      />
       {/* NAV */}
       <header className="eop-nav">
         <button onClick={() => navigate("/")} className="eop-logo" style={{ background: "none", border: "none", cursor: "pointer" }}>

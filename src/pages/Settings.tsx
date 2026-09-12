@@ -4,6 +4,7 @@ import { ArrowLeft, Save, Copy, Check, Download, GraduationCap, ChevronDown, Che
 import { DEFAULT_SMART_TUTOR_CONTEXT } from "../data/learning-content";
 import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import SEO from "../components/SEO";
 
 const SETUP_GUIDE = `
 You are a setup assistant for Echoes of the Past. Your goal is to help me configure the platform based on these latest (2026) standards.
@@ -418,6 +419,11 @@ const Settings = () => {
 
   return (
     <div className="eop-root">
+      <SEO
+        title="Settings & Configuration - GeoStories"
+        description="Configure API keys, AI models, Google Maps, and Supabase integration settings for GeoStories platform."
+        canonicalUrl="https://geostories.eu/settings"
+      />
       {/* NAV */}
       <header className="eop-nav">
         <Link to="/" className="eop-logo">

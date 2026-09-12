@@ -4,6 +4,7 @@ import { ArrowLeft, BookOpen, CheckCircle, GraduationCap, ChevronRight, MessageC
 import { MOOC_CONTENT, Module, MOOC_CURRICULUM_PROMPT } from "../data/learning-content";
 import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import SEO from "../components/SEO";
 
 const LearnHub = () => {
   const { t, lang } = useLanguage();
@@ -59,6 +60,12 @@ const LearnHub = () => {
 
   return (
     <div className="eop-root" style={{ minHeight: "100vh", background: "var(--grey-6)" }}>
+      <SEO
+        title="Interactive AI Learning Hub & MOOC - GeoStories"
+        description="Master digital archiving, no-code AI tools, and historical storytelling with interactive courses, quizzes, and an AI Smart Tutor."
+        keywords="AI learning, digital archiving, MOOC, no-code AI, heritage preservation, Smart Tutor"
+        canonicalUrl="https://geostories.eu/learn"
+      />
       {/* ── NAV ── */}
       <header className="eop-nav">
         <Link to="/" className="eop-logo">

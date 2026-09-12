@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Download, Trash2, Edit, MapPin, Search, X } from "lucide-react";
 import MapView from "@/components/MapView";
 import ImportDialog from "@/components/ImportDialog";
+import SEO from "@/components/SEO";
 import { Postcard } from "@/types/postcard";
 import mockData from "@/data/mock-data.json";
 import { loadAllPostcards } from "@/lib/data-loader";
@@ -88,6 +89,11 @@ const EOPHome = () => {
 
   return (
     <div className="eop-root">
+      <SEO
+        title="GeoStories - Mapping History, One Story at a Time"
+        description="Transform static archives into an immersive, map-based storytelling experience. Explore historical postcards, AI narratives, and an interactive learning hub."
+        canonicalUrl="https://geostories.eu/"
+      />
       {/* ── NAV ── */}
       <header className="eop-nav">
         <Link to="/" className="eop-logo">
