@@ -15,6 +15,7 @@ import { ToastAction } from "@/components/ui/toast";
 import { Postcard } from "@/types/postcard";
 import { getSupabaseConfig, getAIConfig } from "@/lib/supabase-config";
 import { getSupabaseClient } from "@/lib/supabase-client";
+import { parsePostcards } from "@/lib/postcard-data";
 
 interface ImportDialogProps {
   onImport: (postcards: Postcard[]) => void;
@@ -82,9 +83,6 @@ const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => 
     try {
       const supabase = getSupabaseClient();
       
-      // Try to auto-create the bucket just in case they have permissions
-      await supabase.storage.createBucket("postcards", { public: true }).catch(() => {});
-
       const { error } = await supabase.storage.from("postcards").list("", { limit: 1 });
       setBucketStatus(error ? "missing" : "ok");
     } catch {
@@ -106,7 +104,7 @@ const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => 
   const [uploading, setUploading] = useState(false);
   const [uploadedUrl, setUploadedUrl] = useState("");
   const [analysing, setAnalysing] = useState(false);
-  const [visionResults, setVisionResults] = useState<any>(null);
+  const [visionResults, setVisionResults] = useState<Postcard["aiVisionResults"]>();
   const [isDragging, setIsDragging] = useState(false);
   
   // ── Cropping state ──
@@ -159,7 +157,7 @@ const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => 
   // ────────────────────────────────────────────
   // IMAGE UPLOAD TAB
   // ────────────────────────────────────────────
-  const handleFileSelect = (file: File, isSecondary = false) => {
+  const handleFileSelect = useCallback((file: File, isSecondary = false) => {
     if (!file.type.startsWith("image/")) {
       const desc = "Please select an image file.";
       toast({
@@ -182,14 +180,14 @@ const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => 
       setUploadedUrl("");
       setFields({ title: "", description: "", latitude: "", longitude: "" });
     }
-  };
+  }, [toast]);
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFileSelect(file);
-  }, []);
+  }, [handleFileSelect]);
 
   const handleCropComplete = () => {
     if (!completedCrop || !imgRef.current) {
@@ -242,9 +240,6 @@ const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => 
     if (!fileToUpload) throw new Error("No image selected");
     const supabase = getSupabaseClient();
     
-    // Attempt to create the bucket if it doesn't exist (this works if the project allows it)
-    await supabase.storage.createBucket("postcards", { public: true }).catch(() => {});
-
     const ext = fileToUpload.name.split(".").pop();
     const filename = `${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage
@@ -321,10 +316,10 @@ For coordinates: identify location from visual clues. If uncertain, give best es
         const mimeType = imgRes.headers.get("content-type") || imageFile.type || "image/jpeg";
 
         const geminiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
             body: JSON.stringify({
               contents: [{
                 parts: [
@@ -346,12 +341,12 @@ For coordinates: identify location from visual clues. If uncertain, give best es
         result = JSON.parse(raw);
 
       } else {
-        // OpenAI GPT-4o Vision — supports public URLs directly
+        // OpenAI vision models support public URLs directly.
         const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gpt-4o",
+            model: "gpt-4.1-mini",
             max_tokens: 600,
             messages: [{
               role: "user",
@@ -396,7 +391,7 @@ For coordinates: identify location from visual clues. If uncertain, give best es
               <ToastAction altText="Copy deploy command" onClick={() => {
                 const url = getSupabaseConfig().url;
                 const projectRef = url.split('.')[0].split('//')[1];
-                navigator.clipboard.writeText(`npx supabase functions deploy analyse-postcard-image --project-ref ${projectRef} --no-verify-jwt`);
+                navigator.clipboard.writeText(`npx supabase functions deploy analyse-postcard-image --project-ref ${projectRef}`);
               }}>
                 Copy Deploy Cmd
               </ToastAction>
@@ -458,7 +453,7 @@ For coordinates: identify location from visual clues. If uncertain, give best es
         }
       }
 
-      const postcard: Postcard = {
+      const postcard = parsePostcards({
         ...(editingCard || {}),
         id: editingCard?.id || crypto.randomUUID(),
         title: fields.title.trim(),
@@ -466,9 +461,9 @@ For coordinates: identify location from visual clues. If uncertain, give best es
         imageUrl: imgUrl,
         secondaryImages: secondaryUrls.length > 0 ? secondaryUrls : editingCard?.secondaryImages,
         aiVisionResults: visionResults || editingCard?.aiVisionResults,
-        latitude: parseFloat(fields.latitude) || 0,
-        longitude: parseFloat(fields.longitude) || 0,
-      };
+        latitude: fields.latitude,
+        longitude: fields.longitude,
+      })[0];
       
       if (editingCard) {
         // Find and replace in parent state (passed via onImport)
@@ -524,22 +519,23 @@ For coordinates: identify location from visual clues. If uncertain, give best es
     setIsProcessing(true);
     try {
       const { url, anonKey } = getSupabaseConfig();
-      let postcards: any[] = [];
+      const { provider, apiKey } = getAIConfig();
+      let postcards: Postcard[] = [];
       try {
         const response = await fetch(`${url}/functions/v1/format-postcard-json`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${anonKey}` },
-          body: JSON.stringify({ json: jsonInput }),
+          body: JSON.stringify({ json: jsonInput, provider, apiKey }),
         });
         if (!response.ok) {
           throw new Error("Failed to format JSON via edge function");
         }
         const { formatted } = await response.json();
-        postcards = Array.isArray(formatted) ? formatted : [formatted];
+        postcards = parsePostcards(formatted);
       } catch (err) {
         // Fallback: Try native client-side parsing
         const parsed = JSON.parse(jsonInput);
-        postcards = Array.isArray(parsed) ? parsed : [parsed];
+        postcards = parsePostcards(parsed);
       }
       onImport(postcards);
       setOpen(false);

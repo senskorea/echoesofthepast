@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { useNavigate } from "react-router-dom";
 import { Postcard } from "@/types/postcard";
@@ -46,14 +46,11 @@ Help the user complete the following configuration steps:
   VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
   VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
 
-## 3. OpenAI API Key (for AI story generation & JSON import)
+## 3. AI API Key (for generation and JSON import)
 
 - Go to https://platform.openai.com/api-keys and create an API key.
-- In your Supabase project, go to Edge Functions → Secrets and add:
-
-  OPENAI_API_KEY = sk-...
-
-- The edge functions (generate-story and format-postcard-json) will use this key to call gpt-4o-mini.
+- Add a restricted personal key in the GeoStories Settings page. It is stored in this browser profile.
+- Do not place a project-wide AI key in a public Edge Function.
 
 ## 4. Running locally
 
@@ -74,26 +71,7 @@ Please guide me step by step through whichever part I need help with.
     });
   };
 
-  useEffect(() => {
-    // Check for API key - in production this would come from environment
-    const storedKey = localStorage.getItem("google_maps_api_key");
-    if (storedKey) {
-      setApiKey(storedKey);
-      initializeMap(storedKey);
-    } else {
-      setShowKeyInput(true);
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Update markers when postcards change
-  useEffect(() => {
-    if (mapInstanceRef.current && window.google?.maps) {
-      updateMarkers();
-    }
-  }, [postcards]);
-
-  const updateMarkers = async () => {
+  const updateMarkers = useCallback(async () => {
     if (!mapInstanceRef.current) return;
 
     try {
@@ -147,9 +125,9 @@ Please guide me step by step through whichever part I need help with.
     } catch (error) {
       console.error("Error updating markers:", error);
     }
-  };
+  }, [navigate, postcards]);
 
-  const initializeMap = async (key: string) => {
+  const initializeMap = useCallback(async (key: string) => {
     if (!mapRef.current) return;
 
     try {
@@ -171,9 +149,7 @@ Please guide me step by step through whichever part I need help with.
           // Inject Google's official inline bootstrap loader (v=weekly = stable channel)
           const script = document.createElement('script');
           script.setAttribute(MARKER_ATTR, '1');
-          /* eslint-disable */
-          script.textContent = `(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src="https://maps."+c+"apis.com/maps/api/js?"+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({key:"${key}",v:"weekly"});`;
-          /* eslint-enable */
+          script.textContent = `(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src="https://maps."+c+"apis.com/maps/api/js?"+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({key:${JSON.stringify(key)},v:"weekly"});`;
           document.head.appendChild(script);
 
           const timer = setInterval(() => {
@@ -211,7 +187,22 @@ Please guide me step by step through whichever part I need help with.
       setIsLoading(false);
       setShowKeyInput(true);
     }
-  };
+  }, [updateMarkers]);
+
+  useEffect(() => {
+    const configuredKey = localStorage.getItem("google_maps_api_key") || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    if (configuredKey) {
+      setApiKey(configuredKey);
+      void initializeMap(configuredKey);
+    } else {
+      setShowKeyInput(true);
+      setIsLoading(false);
+    }
+  }, [initializeMap]);
+
+  useEffect(() => {
+    if (mapInstanceRef.current && window.google?.maps) void updateMarkers();
+  }, [postcards, updateMarkers]);
   const handleResetView = () => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.setCenter({ lat: 48.8584, lng: 2.2945 });

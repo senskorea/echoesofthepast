@@ -6,13 +6,19 @@ import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import SEO from "../components/SEO";
 
+const PUBLISHED_MODULES = MOOC_CONTENT.filter((module) => module.lessons.length > 0);
+
 const LearnHub = () => {
   const { t, lang } = useLanguage();
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [copied, setCopied] = useState(false);
   const [openTranscripts, setOpenTranscripts] = useState<Record<string, boolean>>({});
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, Record<number, number>>>({});
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, Record<number, number>>>(() => {
+    const saved = localStorage.getItem("eop-quiz-answers");
+    if (!saved) return {};
+    try { return JSON.parse(saved); } catch { return {}; }
+  });
 
   const handleQuizSelect = (moduleId: string, qIndex: number, optionIndex: number) => {
     setQuizAnswers(prev => ({
@@ -38,8 +44,24 @@ const LearnHub = () => {
 
   useEffect(() => {
     const saved = localStorage.getItem("eop-completed-modules");
-    if (saved) setCompletedModules(JSON.parse(saved));
+    if (saved) {
+      try {
+        const parsed: unknown = JSON.parse(saved);
+        if (Array.isArray(parsed)) setCompletedModules(parsed.filter((id): id is string => typeof id === "string"));
+      } catch {
+        localStorage.removeItem("eop-completed-modules");
+      }
+    }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("eop-quiz-answers", JSON.stringify(quizAnswers));
+  }, [quizAnswers]);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("eop-module-change", { detail: selectedModule }));
+    return () => { window.dispatchEvent(new CustomEvent("eop-module-change", { detail: null })); };
+  }, [selectedModule]);
 
   const toggleComplete = (id: string) => {
     const newCompleted = completedModules.includes(id)
@@ -56,7 +78,8 @@ const LearnHub = () => {
     });
   };
 
-  const progress = Math.round((completedModules.length / MOOC_CONTENT.length) * 100);
+  const completedPublished = completedModules.filter((id) => PUBLISHED_MODULES.some((module) => module.id === id));
+  const progress = Math.round((completedPublished.length / PUBLISHED_MODULES.length) * 100);
 
   return (
     <div className="eop-root" style={{ minHeight: "100vh", background: "var(--grey-6)" }}>
@@ -89,7 +112,7 @@ const LearnHub = () => {
             </p>
             <h1 className="pd-title" style={{ fontSize: "2.5rem", marginBottom: 8 }}>Interactive AI Hub</h1>
             <p className="pd-description" style={{ maxWidth: 600 }}>
-              Master the tools of digital preservation and historical analysis through our comprehensive 5-module curriculum.
+              Master the tools of digital preservation and historical analysis through four published modules.
             </p>
             <button 
               onClick={handleCopyCurriculum}
@@ -155,7 +178,7 @@ const LearnHub = () => {
                   }}
                 >
                   {completedModules.includes(selectedModule.id) ? <CheckCircle style={{ width: 18, height: 18 }} /> : null}
-                  {completedModules.includes(selectedModule.id) ? "Module Completed" : "Mark as Complete"}
+                  {completedModules.includes(selectedModule.id) ? "Self-reported complete" : "Mark as self-reported complete"}
                 </button>
               </div>
 
@@ -249,10 +272,10 @@ const LearnHub = () => {
                                   );
                                 })}
                               </div>
-                              {isAnswered && (q as any).explanation && (
+                              {isAnswered && q.explanation && (
                                 <div style={{ marginTop: 16, padding: 16, background: isCorrect ? "#ecfdf5" : "#fef2f2", borderRadius: 8, borderLeft: `4px solid ${isCorrect ? '#10b981' : '#ef4444'}` }}>
                                   <p style={{ margin: 0, fontSize: "0.9rem", color: isCorrect ? "#065f46" : "#991b1b" }}>
-                                    <strong>{isCorrect ? "Correct!" : "Incorrect."}</strong> {(q as any).explanation}
+                                    <strong>{isCorrect ? "Correct!" : "Incorrect."}</strong> {q.explanation}
                                   </p>
                                   {!isCorrect && (
                                     <button 
@@ -282,7 +305,7 @@ const LearnHub = () => {
         ) : (
           /* ── DASHBOARD GRID ── */
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
-            {MOOC_CONTENT.map(module => {
+            {PUBLISHED_MODULES.map(module => {
               const isCompleted = completedModules.includes(module.id);
               return (
                 <div 

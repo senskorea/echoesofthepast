@@ -28,7 +28,7 @@ async function analyseWithOpenAI(imageUrl: string, apiKey: string) {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: "gpt-4.1-mini",
       max_tokens: 600,
       messages: [{
         role: "user",
@@ -54,10 +54,10 @@ async function analyseWithGemini(imageUrl: string, apiKey: string) {
   const mimeType = imgRes.headers.get("content-type") || "image/jpeg";
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         contents: [{
           parts: [
@@ -89,18 +89,14 @@ serve(async (req) => {
     const { imageUrl, provider = "openai", apiKey: clientKey } = await req.json();
     if (!imageUrl) throw new Error("imageUrl is required");
 
-    const openaiSecret = Deno.env.get("OPENAI_API_KEY");
-    const geminiSecret = Deno.env.get("GEMINI_API_KEY");
+    const key = typeof clientKey === "string" ? clientKey.trim() : "";
+    if (!key) throw new Error("An AI API key from Settings is required.");
 
     let rawResult: string;
 
     if (provider === "gemini") {
-      const key = clientKey || geminiSecret;
-      if (!key) throw new Error("Gemini API key not configured.");
       rawResult = await analyseWithGemini(imageUrl, key);
     } else {
-      const key = clientKey || openaiSecret;
-      if (!key) throw new Error("OpenAI API key not configured.");
       rawResult = await analyseWithOpenAI(imageUrl, key);
     }
 

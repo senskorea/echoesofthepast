@@ -1,10 +1,10 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === "production" ? "/echoesofthepast/" : "/",
+  base: process.env.VITE_BASE_PATH || (mode === "production" ? "/echoesofthepast/" : "/"),
   server: {
     host: "::",
     port: 8080,
@@ -12,17 +12,19 @@ export default defineConfig(({ mode }) => ({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom", "react-helmet-async"],
-          "vendor-ui": ["lucide-react", "clsx", "tailwind-merge"],
-          "vendor-query": ["@tanstack/react-query"],
-          "vendor-maps": ["@googlemaps/markerclusterer"],
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (id.includes("@tanstack/react-query")) return "vendor-query";
+          if (id.includes("@googlemaps/markerclusterer")) return "vendor-maps";
+          if (/node_modules\/(react|react-dom|react-router|react-helmet-async)\//.test(id)) return "vendor-react";
+          if (/(lucide-react|clsx|tailwind-merge)/.test(id)) return "vendor-ui";
+          return undefined;
         },
       },
     },

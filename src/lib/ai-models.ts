@@ -8,47 +8,35 @@ export interface AIModel {
 
 export const TEXT_MODELS: AIModel[] = [
   { 
-    id: "gpt-4o", 
-    name: "GPT-4o (Omni)", 
+    id: "gpt-5-mini",
+    name: "GPT-5 mini",
     provider: "openai", 
     description: "Multimodal flagship model. Versatile for heritage preservation tasks combining vision, text, and real-time analysis." 
   },
   { 
-    id: "gpt-4o-mini", 
-    name: "GPT-4o mini", 
+    id: "gpt-4.1-mini",
+    name: "GPT-4.1 mini",
     provider: "openai", 
     description: "Cost-efficient, high-performance model. Efficient for scalable heritage tasks like metadata and narratives." 
   },
   { 
-    id: "o1-mini", 
-    name: "o1-mini", 
-    provider: "openai", 
-    description: "Advanced reasoning focused. Strong for intricate historical analysis and chronology reconstruction." 
-  },
-  { 
-    id: "gemini-2.0-flash",
-    name: "Gemini 2.0 Flash",
+    id: "gemini-3.6-flash",
+    name: "Gemini 3.6 Flash",
     provider: "gemini", 
     description: "Frontier-class speed. Excels at rapid, large-scale multimodal historical data extraction and storytelling." 
-  },
-  { 
-    id: "gemini-1.5-pro",
-    name: "Gemini 1.5 Pro",
-    provider: "gemini", 
-    description: "Advanced intelligence. Superior for deep, nuanced historical reasoning across vast multimodal sources." 
   },
 ];
 
 export const IMAGE_MODELS: AIModel[] = [
   { 
-    id: "dall-e-3",
-    name: "DALL·E 3",
+    id: "gpt-image-2.5-flare",
+    name: "GPT Image 2.5 Flare",
     provider: "openai", 
-    description: "State-of-the-art image generation. Successor to DALL-E 2 with exceptional structural clarity."
+    description: "Fast, high-quality image generation for everyday heritage work."
   },
   { 
-    id: "imagen-4.0-generate-001", 
-    name: "Imagen 4 (Google)", 
+    id: "gemini-3.1-flash-image",
+    name: "Gemini 3.1 Flash Image",
     provider: "gemini", 
     description: "Google's latest flagship. Exceptional clarity, text rendering, and high-fidelity architectural details." 
   },

@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.75.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,18 +22,17 @@ serve(async (req) => {
       apiKey: clientKey 
     } = body;
 
-    const geminiSecret = Deno.env.get("GEMINI_API_KEY");
-    const key = clientKey || geminiSecret;
+    const key = typeof clientKey === "string" ? clientKey.trim() : "";
     if (!key) {
-      throw new Error("Gemini API key not configured. Add it in Settings or set GEMINI_API_KEY in Supabase secrets.");
+      throw new Error("A Gemini API key from Settings is required for video generation.");
     }
 
     if (action === "generate") {
       if (!prompt) throw new Error("Prompt is required for video generation.");
       
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning?key=${key}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning`;
       
-      const instance: any = { prompt };
+      const instance: { prompt: string; image?: { bytesBase64Encoded: string; mimeType: string } } = { prompt };
       if (base64Image) {
         instance.image = {
           bytesBase64Encoded: base64Image.split(",").pop() || base64Image,
@@ -42,7 +42,7 @@ serve(async (req) => {
 
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({
           instances: [instance],
           parameters: {
@@ -74,9 +74,9 @@ serve(async (req) => {
         ? operationName 
         : `operations/${operationName}`;
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/${cleanName}?key=${key}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/${cleanName}`;
       
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: { "x-goog-api-key": key } });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
         throw new Error(e?.error?.message || `Failed to check video status: ${res.status}`);
@@ -90,12 +90,26 @@ serve(async (req) => {
           throw new Error("Video generation completed, but no video URI was found.");
         }
         
-        // Append API key if required
-        const finalVideoUrl = videoUri.includes("?key=") 
-          ? videoUri 
-          : `${videoUri}${videoUri.includes("?") ? "&" : "?"}key=${key}`;
+        const videoResponse = await fetch(videoUri, { headers: { "x-goog-api-key": key } });
+        if (!videoResponse.ok) throw new Error(`Failed to retrieve generated video: ${videoResponse.status}`);
 
-        return new Response(JSON.stringify({ done: true, videoUrl: finalVideoUrl }), {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL");
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (!supabaseUrl || !serviceRoleKey) throw new Error("Supabase storage credentials are unavailable.");
+
+        const storage = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+        const objectPath = `generated-videos/${crypto.randomUUID()}.mp4`;
+        const { error: uploadError } = await storage.storage
+          .from("postcards")
+          .upload(objectPath, await videoResponse.arrayBuffer(), {
+            contentType: videoResponse.headers.get("content-type") || "video/mp4",
+            upsert: false,
+          });
+        if (uploadError) throw new Error(`Failed to store generated video: ${uploadError.message}`);
+
+        const { data: publicUrl } = storage.storage.from("postcards").getPublicUrl(objectPath);
+
+        return new Response(JSON.stringify({ done: true, videoUrl: publicUrl.publicUrl }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       } else {

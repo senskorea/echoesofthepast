@@ -40,7 +40,7 @@ async function formatWithOpenAI(json: string, apiKey: string): Promise<string> {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-mini",
       messages: [{ role: "user", content: buildPrompt(json) }],
     }),
   });
@@ -52,10 +52,10 @@ async function formatWithOpenAI(json: string, apiKey: string): Promise<string> {
 // ── Gemini ────────────────────────────────────────────────────
 async function formatWithGemini(json: string, apiKey: string): Promise<string> {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         contents: [{ parts: [{ text: buildPrompt(json) }] }],
         generationConfig: { maxOutputTokens: 2000, temperature: 0.1 },
@@ -80,18 +80,14 @@ serve(async (req) => {
 
   try {
     const { json, provider = "openai", apiKey: clientKey } = await req.json();
-    const openaiSecret = Deno.env.get("OPENAI_API_KEY");
-    const geminiSecret = Deno.env.get("GEMINI_API_KEY");
+    const key = typeof clientKey === "string" ? clientKey.trim() : "";
+    if (!key) throw new Error("An AI API key from Settings is required.");
 
     let rawResult: string;
 
     if (provider === "gemini") {
-      const key = clientKey || geminiSecret;
-      if (!key) throw new Error("Gemini API key not configured.");
       rawResult = await formatWithGemini(json, key);
     } else {
-      const key = clientKey || openaiSecret;
-      if (!key) throw new Error("OpenAI API key not configured.");
       rawResult = await formatWithOpenAI(json, key);
     }
 

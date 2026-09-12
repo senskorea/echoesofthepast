@@ -1,22 +1,37 @@
 import { Postcard } from "../types/postcard";
 import mockData from "../data/mock-data.json";
+import { parsePostcards, readDeletedPostcardIds, readStoredPostcards } from "./postcard-data";
+
+function resolvePublicAsset(path: string | undefined): string | undefined {
+  if (!path?.startsWith("/")) return path;
+  return `${import.meta.env.BASE_URL}${path.slice(1)}`;
+}
+
+function resolvePostcardAssets(card: Postcard): Postcard {
+  return {
+    ...card,
+    imageUrl: resolvePublicAsset(card.imageUrl),
+    image_url: resolvePublicAsset(card.image_url),
+    secondaryImages: card.secondaryImages?.map((image) => resolvePublicAsset(image) ?? image),
+  };
+}
 
 export async function loadAllPostcards(): Promise<Postcard[]> {
   let systemPostcards: Postcard[] = [];
   
   // 1. Load from public eop-postcards.json
   try {
-    const res = await fetch("/eop-postcards.json");
+    const res = await fetch(`${import.meta.env.BASE_URL}eop-postcards.json`);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data)) systemPostcards = data;
+      if (Array.isArray(data)) systemPostcards = parsePostcards(data);
     }
   } catch (err) {
     console.error("Failed to fetch eop-postcards.json", err);
   }
 
   // 2. Load from mockData as fallback/base
-  const baseData = [...(mockData as Postcard[])];
+  const baseData = parsePostcards(mockData);
   
   // Merge system postcards into base (overwrite by ID)
   const mergedSystem = [...baseData];
@@ -27,15 +42,7 @@ export async function loadAllPostcards(): Promise<Postcard[]> {
   });
 
   // 3. Load from localStorage (user imports/edits)
-  let userPostcards: Postcard[] = [];
-  const stored = localStorage.getItem("geostories-postcards");
-  if (stored) {
-    try {
-      userPostcards = JSON.parse(stored);
-    } catch (err) {
-      console.error("Failed to parse localStorage postcards", err);
-    }
-  }
+  const userPostcards = readStoredPostcards();
 
   // 4. Final Merge: User data takes priority
   const final = [...mergedSystem];
@@ -45,5 +52,6 @@ export async function loadAllPostcards(): Promise<Postcard[]> {
     else final.push(up);
   });
 
-  return final;
+  const deleted = readDeletedPostcardIds();
+  return final.filter((card) => !deleted.has(card.id)).map(resolvePostcardAssets);
 }

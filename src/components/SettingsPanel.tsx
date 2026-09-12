@@ -103,10 +103,9 @@ Help the user configure their Supabase project:
    VITE_SUPABASE_URL=https://<your-ref>.supabase.co
    VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
 
-6. For the Edge Functions (AI story generation):
-   - Go to your Supabase dashboard → Edge Functions → Secrets
-   - Add: OPENAI_API_KEY = sk-...
-   - Deploy the functions: supabase functions deploy generate-story && supabase functions deploy format-postcard-json
+6. Deploy the required Edge Functions with Supabase CLI.
+7. Keep storage uploads private or restricted to authenticated contributors. The publishable key does not make an unrestricted upload policy safe.
+8. AI requests use the provider key saved in this browser; do not configure a shared provider secret in a public Edge Function.
 
 Please guide me step by step.
 `.trim();
@@ -140,19 +139,14 @@ Here is my data to convert:
 const OPENAI_INSTRUCTIONS = `
 You are a setup assistant for GeoStories.
 
-Help the user configure the OpenAI API key used by the edge functions:
+Help the user configure their OpenAI API key in GeoStories:
 
 1. Go to https://platform.openai.com/api-keys
 2. Sign in and click "Create new secret key". Give it a name like "geostories".
 3. Copy the key immediately — it won't be shown again.
-4. In your Supabase dashboard, go to Edge Functions → Secrets.
-5. Add a secret named: OPENAI_API_KEY  with the value: sk-...
-6. The following edge functions use this key:
-   - generate-story: creates historical narratives for postcards (model: gpt-4o-mini)
-   - format-postcard-json: normalises arbitrary JSON into the postcard schema (model: gpt-4o-mini)
-7. Make sure both functions are deployed:
-   supabase functions deploy generate-story
-   supabase functions deploy format-postcard-json
+4. Open GeoStories Settings and paste the key into the OpenAI field.
+5. Save the key. It is stored unencrypted in this browser's local storage and is sent only when you request an OpenAI operation.
+6. Restrict the key and monitor its usage in the OpenAI dashboard.
 
 Please guide me step by step.
 `.trim();
@@ -303,15 +297,15 @@ const SettingsPanel = () => {
           {/* ── OpenAI ── */}
           <SettingsSection
             icon={<Bot className="w-4 h-4" />}
-            title="OpenAI API Key (Edge Functions)"
-            description="Used by the Supabase edge functions to generate historical narratives and reformat JSON. Set as a Supabase secret — never in the frontend."
+            title="OpenAI API Key"
+            description="Used for requested OpenAI operations. Save it in the main Settings page; browser storage is not encrypted."
             copyKey="openai"
             copyText={OPENAI_INSTRUCTIONS}
             copied={copied}
             onCopy={copy}
           >
             <p className="text-xs text-muted-foreground bg-muted px-3 py-2 rounded-md">
-              Set via Supabase dashboard → Edge Functions → Secrets → <code>OPENAI_API_KEY</code>
+              Configure this key from the main Settings page.
             </p>
           </SettingsSection>
 

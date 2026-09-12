@@ -15,6 +15,7 @@ interface SmartTutorProps {
 }
 
 const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
+  const [activeModule, setActiveModule] = useState<Module | null>(currentModule || null);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { 
@@ -32,6 +33,12 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
     }
   }, [messages]);
 
+  useEffect(() => {
+    const handleModuleChange = (event: Event) => setActiveModule((event as CustomEvent<Module | null>).detail);
+    window.addEventListener("eop-module-change", handleModuleChange);
+    return () => window.removeEventListener("eop-module-change", handleModuleChange);
+  }, []);
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -46,10 +53,10 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
       
       const customContext = localStorage.getItem("eop-smart-tutor-context") || DEFAULT_SMART_TUTOR_CONTEXT;
       
-      let systemPrompt = `${customContext}\n\nCURRENT CONTEXT:\nYou are currently assisting the learner in the "${currentModule?.title || "Main Dashboard"}" section of the MOOC.`;
+      let systemPrompt = `${customContext}\n\nCURRENT CONTEXT:\nYou are currently assisting the learner in the "${activeModule?.title || "Main Dashboard"}" section of the MOOC.`;
       
-      if (currentModule) {
-        systemPrompt += `\nModule Details: ${currentModule.shortDesc}`;
+      if (activeModule) {
+        systemPrompt += `\nModule Details: ${activeModule.shortDesc}`;
       }
 
       const history = messages.slice(-10).map(m => `${m.role === "user" ? "User" : "Tutor"}: ${m.content}`).join("\n");
@@ -57,8 +64,9 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
 
       const response = await generateText(fullPrompt, modelId);
       setMessages(prev => [...prev, { role: "assistant", content: response }]);
-    } catch (err: any) {
-      setMessages(prev => [...prev, { role: "assistant", content: `I'm sorry, I encountered an error: ${err.message}` }]);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setMessages(prev => [...prev, { role: "assistant", content: `I'm sorry, I encountered an error: ${message}` }]);
     } finally {
       setIsLoading(false);
     }
@@ -112,7 +120,7 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
           {/* Header */}
           <div style={{ padding: "20px 24px", background: "var(--grey-1)", color: "white", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyCenter: "center" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <GraduationCap style={{ width: 20, height: 20 }} />
               </div>
               <div>

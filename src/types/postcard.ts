@@ -8,5 +8,10 @@ export interface Postcard {
   latitude: number;
   longitude: number;
   detailUrl?: string;
-  aiVisionResults?: any; // To store what the AI "sees"
+  aiVisionResults?: {
+    transcribed_text?: string;
+    visual_description?: string;
+    historical_context?: string;
+    [key: string]: unknown;
+  };
 }

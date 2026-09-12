@@ -5,8 +5,8 @@ import MapView from "@/components/MapView";
 import ImportDialog from "@/components/ImportDialog";
 import SEO from "@/components/SEO";
 import { Postcard } from "@/types/postcard";
-import mockData from "@/data/mock-data.json";
 import { loadAllPostcards } from "@/lib/data-loader";
+import { POSTCARDS_STORAGE_KEY, setPostcardDeleted } from "@/lib/postcard-data";
 
 import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
@@ -48,8 +48,9 @@ const EOPHome = () => {
   }, []);
 
   const handleImportOrUpdate = (newCards: Postcard[]) => {
-    let updated = [...postcards];
+    const updated = [...postcards];
     newCards.forEach(nc => {
+      setPostcardDeleted(nc.id, false);
       const idx = updated.findIndex(c => c.id === nc.id);
       if (idx > -1) {
         updated[idx] = nc;
@@ -58,7 +59,7 @@ const EOPHome = () => {
       }
     });
     setPostcards(updated);
-    localStorage.setItem("geostories-postcards", JSON.stringify(updated));
+    localStorage.setItem(POSTCARDS_STORAGE_KEY, JSON.stringify(updated));
   };
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
@@ -66,8 +67,9 @@ const EOPHome = () => {
     e.stopPropagation();
     if (!confirm("Are you sure you want to delete this story? This cannot be undone.")) return;
     const updated = postcards.filter(c => c.id !== id);
+    setPostcardDeleted(id, true);
     setPostcards(updated);
-    localStorage.setItem("geostories-postcards", JSON.stringify(updated));
+    localStorage.setItem(POSTCARDS_STORAGE_KEY, JSON.stringify(updated));
   };
 
   const handleExportCard = (e: React.MouseEvent, card: Postcard) => {
@@ -76,7 +78,6 @@ const EOPHome = () => {
     const exportData = {
       ...card,
       exportedAt: new Date().toISOString(),
-      license: "CC BY-NC 4.0 (Open Educational Resource)"
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);

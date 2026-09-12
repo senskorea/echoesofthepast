@@ -16,7 +16,9 @@ const systemPrompt = `You are a historical storyteller specialising in vintage p
 5. Maintain historical accuracy while being engaging
 6. Use a warm, nostalgic tone that honours the past`;
 
-function userPrompt(postcard: { title: string; description: string; latitude: number; longitude: number }) {
+interface PostcardInput { title: string; description: string; latitude: number; longitude: number }
+
+function userPrompt(postcard: PostcardInput) {
   return `Create a captivating historical narrative for this postcard:
 
 Title: ${postcard.title}
@@ -27,15 +29,15 @@ Generate a story that brings this moment in history to life.`;
 }
 
 // ── OpenAI ───────────────────────────────────────────────────
-async function generateWithOpenAI(postcard: object, apiKey: string): Promise<string> {
+async function generateWithOpenAI(postcard: PostcardInput, apiKey: string): Promise<string> {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-mini",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt(postcard as any) },
+        { role: "user", content: userPrompt(postcard) },
       ],
     }),
   });
@@ -45,13 +47,13 @@ async function generateWithOpenAI(postcard: object, apiKey: string): Promise<str
 }
 
 // ── Gemini ───────────────────────────────────────────────────
-async function generateWithGemini(postcard: object, apiKey: string): Promise<string> {
-  const prompt = `${systemPrompt}\n\n${userPrompt(postcard as any)}`;
+async function generateWithGemini(postcard: PostcardInput, apiKey: string): Promise<string> {
+  const prompt = `${systemPrompt}\n\n${userPrompt(postcard)}`;
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { maxOutputTokens: 800, temperature: 0.8 },
@@ -70,19 +72,14 @@ serve(async (req) => {
   try {
     const { postcard, provider = "openai", apiKey: clientKey } = await req.json();
 
-    // Resolve API key: client-provided → Supabase secret
-    const openaiSecret = Deno.env.get("OPENAI_API_KEY");
-    const geminiSecret = Deno.env.get("GEMINI_API_KEY");
+    const key = typeof clientKey === "string" ? clientKey.trim() : "";
+    if (!key) throw new Error("An AI API key from Settings is required.");
 
     let story: string;
 
     if (provider === "gemini") {
-      const key = clientKey || geminiSecret;
-      if (!key) throw new Error("Gemini API key not configured. Add it in Settings or set GEMINI_API_KEY in Supabase secrets.");
       story = await generateWithGemini(postcard, key);
     } else {
-      const key = clientKey || openaiSecret;
-      if (!key) throw new Error("OpenAI API key not configured. Add it in Settings or set OPENAI_API_KEY in Supabase secrets.");
       story = await generateWithOpenAI(postcard, key);
     }
 

@@ -1,20 +1,28 @@
 import { getAIConfig, getSupabaseConfig } from "./supabase-config";
 
+type ApiError = { error?: { message?: string } | string; message?: string };
+
+async function errorMessage(res: Response, fallback: string): Promise<string> {
+  const body = await res.json().catch(() => ({})) as ApiError;
+  if (typeof body.error === "string") return body.error;
+  return body.error?.message || body.message || fallback;
+}
+
 export async function generateText(prompt: string, modelId: string, base64Image?: string, mimeType: string = "image/jpeg"): Promise<string> {
   const { provider, apiKey } = getAIConfig();
   if (!apiKey) throw new Error(`No API key found for this provider. Add it in Settings.`);
 
   if (modelId.includes("gemini")) {
-    const parts: any[] = [{ text: prompt }];
+    const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [{ text: prompt }];
     if (base64Image) {
       parts.push({ inlineData: { mimeType, data: base64Image.split(",").pop() || base64Image } });
     }
     
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({ 
           contents: [{ parts }], 
           generationConfig: { maxOutputTokens: 2000, temperature: 0.8 } 
@@ -22,13 +30,12 @@ export async function generateText(prompt: string, modelId: string, base64Image?
       }
     );
     if (!res.ok) { 
-      const e = await res.json().catch(() => ({})); 
-      throw new Error(e?.error?.message || `Gemini error ${res.status}`); 
+      throw new Error(await errorMessage(res, `Gemini error ${res.status}`));
     }
     const d = await res.json();
     return d.candidates[0].content.parts[0].text;
   } else {
-    const messageContent: any[] = [{ type: "text", text: prompt }];
+    const messageContent: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [{ type: "text", text: prompt }];
     if (base64Image) {
       const b64 = base64Image.includes(",") ? base64Image : `data:${mimeType};base64,${base64Image}`;
       messageContent.push({ type: "image_url", image_url: { url: b64 } });
@@ -40,12 +47,11 @@ export async function generateText(prompt: string, modelId: string, base64Image?
       body: JSON.stringify({ 
         model: modelId, 
         messages: [{ role: "user", content: messageContent }], 
-        ...(modelId.startsWith("o1") ? { max_completion_tokens: 2000 } : { max_tokens: 2000 })
+        ...(modelId.startsWith("gpt-5") || modelId.startsWith("o") ? { max_completion_tokens: 2000 } : { max_tokens: 2000 })
       }),
     });
     if (!res.ok) { 
-      const e = await res.json().catch(() => ({})); 
-      throw new Error(e?.error?.message || `OpenAI error ${res.status}`); 
+      throw new Error(await errorMessage(res, `OpenAI error ${res.status}`));
     }
     const d = await res.json();
     return d.choices[0].message.content;
@@ -56,25 +62,25 @@ export async function generateImage(prompt: string, modelId: string): Promise<st
   const { apiKey } = getAIConfig();
   if (!apiKey) throw new Error(`API key missing. Add it in Settings.`);
 
-  if (modelId.includes("imagen")) {
+  if (modelId.includes("gemini")) {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predict?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
-          instances: [{ prompt }],
-          parameters: { sampleCount: 1 },
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { responseModalities: ["IMAGE"] },
         }),
       }
     );
     if (!res.ok) {
-      const e = await res.json().catch(() => ({}));
-      throw new Error(e?.error?.message || `Imagen API error ${res.status}.`);
+      throw new Error(await errorMessage(res, `Gemini image API error ${res.status}.`));
     }
     const d = await res.json();
-    const b64 = d.predictions[0].bytesBase64Encoded;
-    return `data:image/png;base64,${b64}`;
+    const imagePart = d.candidates?.[0]?.content?.parts?.find((part: { inlineData?: { data?: string; mimeType?: string } }) => part.inlineData?.data);
+    if (!imagePart?.inlineData?.data) throw new Error("Gemini returned no generated image.");
+    return `data:${imagePart.inlineData.mimeType || "image/png"};base64,${imagePart.inlineData.data}`;
   } else {
     const res = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
@@ -83,16 +89,18 @@ export async function generateImage(prompt: string, modelId: string): Promise<st
         model: modelId,
         prompt, 
         size: "1024x1024", 
-        quality: "standard", 
+        quality: "medium",
         n: 1 
       }),
     });
     if (!res.ok) {
-      const e = await res.json().catch(() => ({}));
-      throw new Error(e?.error?.message || `DALL-E error ${res.status}`);
+      throw new Error(await errorMessage(res, `OpenAI image error ${res.status}`));
     }
     const d = await res.json();
-    return d.data[0].url;
+    const result = d.data?.[0];
+    if (result?.b64_json) return `data:image/png;base64,${result.b64_json}`;
+    if (result?.url) return result.url;
+    throw new Error("OpenAI returned no generated image.");
   }
 }
 
@@ -104,14 +112,13 @@ export async function generateAudio(text: string): Promise<Blob> {
     method: "POST",
     headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({ 
-      model: "tts-1", 
+      model: "gpt-4o-mini-tts",
       input: text.slice(0, 4096), 
       voice: "nova" 
     }),
   });
   if (!res.ok) { 
-    const e = await res.json().catch(() => ({})); 
-    throw new Error(e?.error?.message || `TTS error ${res.status}`); 
+    throw new Error(await errorMessage(res, `TTS error ${res.status}`));
   }
   return res.blob();
 }
@@ -146,8 +153,7 @@ export async function generateVideo(
   });
 
   if (!res.ok) {
-    const e = await res.json().catch(() => ({}));
-    throw new Error(e?.error || e?.message || `Failed to initiate video generation (status ${res.status}).`);
+    throw new Error(await errorMessage(res, `Failed to initiate video generation (status ${res.status}).`));
   }
 
   const d = await res.json();
@@ -191,8 +197,7 @@ export async function pollVideoOperation(
     });
 
     if (!res.ok) {
-      const e = await res.json().catch(() => ({}));
-      throw new Error(e?.error || e?.message || `Failed to check video status: ${res.status}`);
+      throw new Error(await errorMessage(res, `Failed to check video status: ${res.status}`));
     }
 
     const d = await res.json();
@@ -210,5 +215,3 @@ export async function pollVideoOperation(
 
   throw new Error("Video generation timed out. Please try again.");
 }
-
-

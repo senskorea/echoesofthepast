@@ -1,7 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ArrowLeft, MapPin, Loader2, Download, Save, Volume2, ImageIcon, FileText, Pencil, BookOpen, Mail, Clapperboard, Check, FileJson, Sparkles, ScanText, HeartPulse, Lightbulb, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, Play, Pause, Wand2, Layers } from "lucide-react";
-import mockData from "@/data/mock-data.json";
 import { Postcard } from "@/types/postcard";
 import { getAIConfig } from "@/lib/supabase-config";
 import { TEXT_MODELS, IMAGE_MODELS, VIDEO_MODELS, AIModel } from "@/lib/ai-models";
@@ -12,6 +11,7 @@ import { ToastAction } from "@/components/ui/toast";
 import { generateText, generateImage, generateAudio, generateVideo, pollVideoOperation } from "@/lib/ai-service";
 import { loadAllPostcards } from "@/lib/data-loader";
 import SEO from "@/components/SEO";
+import { assetKey, sanitizeAsset } from "@/lib/postcard-data";
 
 // ── Preset definitions ────────────────────────────────────────
 type AssetType = "text" | "image" | "audio" | "video";
@@ -118,10 +118,6 @@ const PRESETS: Preset[] = [
 ];
 
 
-// ── Asset key helpers ─────────────────────────────────────────
-const assetKey = (cardId: string, presetId: string) => `eop-asset-${cardId}-${presetId}`;
-
-
 // ── Component ─────────────────────────────────────────────────
 const PostcardDetail = () => {
   const { t } = useLanguage();
@@ -214,7 +210,7 @@ const PostcardDetail = () => {
 
   // checklist loader step progression
   useEffect(() => {
-    let loaderInterval: any;
+    let loaderInterval: ReturnType<typeof setInterval> | undefined;
     if (isGenerating) {
       setLoaderStep(1);
       loaderInterval = setInterval(() => {
@@ -235,6 +231,8 @@ const PostcardDetail = () => {
       setAudioCurrentTime(0);
       setAudioDuration(0);
     }
+  // audioInstance is intentionally omitted: adding it would stop a newly created player immediately.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPreset, currentOutput]);
 
   // Cleanup audio element on component unmount
@@ -410,6 +408,11 @@ const PostcardDetail = () => {
         }
       }
 
+      const requiresOriginalImage = (activeType === "image" && imageSource === "actual") || selectedPreset === "ocr_transcription";
+      if (requiresOriginalImage && !base64Image) {
+        throw new Error("The original postcard image could not be loaded. Check its URL and CORS settings, then try again.");
+      }
+
       if (activeType === "image") {
         let finalImagePrompt = promptText;
 
@@ -494,20 +497,27 @@ const PostcardDetail = () => {
 
   const handleSave = () => {
     if (!currentOutput || !id) return;
-    const data = { type: currentOutput.type, content: currentOutput.content };
-    localStorage.setItem(assetKey(id, selectedPreset), JSON.stringify(data));
-    setSavedAssets((prev) => ({ ...prev, [selectedPreset]: data }));
-    setJustSaved(true);
-    setTimeout(() => setJustSaved(false), 2000);
+    const data = sanitizeAsset({ type: currentOutput.type, content: currentOutput.content });
+    try {
+      localStorage.setItem(assetKey(id, selectedPreset), JSON.stringify(data));
+      setSavedAssets((prev) => ({ ...prev, [selectedPreset]: data }));
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2000);
+    } catch {
+      toast({
+        title: "Save failed",
+        description: "This browser does not have enough storage for this asset. Download it instead.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExport = () => {
     if (!postcard) return;
     const exportData = {
       ...postcard,
-      assets: savedAssets,
+      assets: Object.fromEntries(Object.entries(savedAssets).map(([key, asset]) => [key, sanitizeAsset(asset)])),
       exportedAt: new Date().toISOString(),
-      license: "CC BY-NC 4.0 (Open Educational Resource)"
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -515,6 +525,7 @@ const PostcardDetail = () => {
     a.href = url;
     a.download = `eop-${postcard.title.replace(/\s+/g, '-').toLowerCase()}.json`;
     a.click();
+    URL.revokeObjectURL(url);
     toast({ title: "Exported ✓", description: "All assets and metadata bundled into JSON." });
   };
 
@@ -732,7 +743,7 @@ const PostcardDetail = () => {
                       <button
                         key={tab.id}
                         onClick={() => {
-                          setSelectedMedium(tab.id as any);
+                          setSelectedMedium(tab.id as AssetType | "custom");
                           // Auto select the first preset of this medium
                           const firstPreset = PRESETS.find(p => p.type === tab.id || (tab.id === "custom" && p.id === "custom"));
                           if (firstPreset) {
@@ -755,7 +766,7 @@ const PostcardDetail = () => {
               {/* STEP 2: SELECT TEMPLATE */}
               {currentStep === 2 && (
                 <div>
-                  <div style={{ display: "flex", justifyContext: "space-between", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                     <p className="eop-label">Step 2: Choose Creative Template</p>
                     <button 
                       onClick={() => setCurrentStep(1)} 

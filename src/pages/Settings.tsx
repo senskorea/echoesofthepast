@@ -5,6 +5,9 @@ import { DEFAULT_SMART_TUTOR_CONTEXT } from "../data/learning-content";
 import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import SEO from "../components/SEO";
+import { loadAllPostcards } from "../lib/data-loader";
+import { createArchive, DELETED_POSTCARDS_STORAGE_KEY, parsePostcards, parseSavedAsset, setPostcardDeleted, POSTCARDS_STORAGE_KEY } from "../lib/postcard-data";
+import type { Postcard } from "../types/postcard";
 
 const SETUP_GUIDE = `
 You are a setup assistant for Echoes of the Past. Your goal is to help me configure the platform based on these latest (2026) standards.
@@ -13,7 +16,7 @@ IMPORTANT INSTRUCTION: DO NOT give me all the steps at once. That is too overwhe
 
 Here are the configuration requirements:
 1. Zero-Docker AI: This works directly in the browser via API keys.
-2. AI Models: Gemini 3 Flash / 3.1 Pro / Imagen 4, or OpenAI GPT-4o / GPT Image 2.
+2. AI Models: Gemini 3.6 Flash / Gemini 3.1 Flash Image, or OpenAI GPT-5 mini / GPT Image 2.5.
 3. Supabase: Requires Project URL and Anon key, and specifically a bucket named "postcards".
 4. Google Maps: Requires a Maps JavaScript API key restricted to localhost:8080.
 
@@ -29,8 +32,8 @@ IMPORTANT INSTRUCTION: DO NOT dump all these instructions at once. Guide me inte
 Here is what needs to be done:
 Step 1: Create a bucket named exactly "postcards".
 Step 2: Toggle ON "Public bucket".
-Step 3: Go to Storage -> Policies and create an INSERT policy for the postcards bucket allowing public/anon uploads with formula 'true'.
-Step 4: Create a SELECT policy for the postcards bucket allowing public/anon reads with formula 'true'.
+Step 3: Restrict uploads to the smallest audience that needs them. Do not use an unrestricted public INSERT policy on a production project.
+Step 4: Add a SELECT policy appropriate for the archive's intended public or private access.
 
 Please begin by giving me just Step 1.
 `.trim();
@@ -82,6 +85,8 @@ const extractOpenAIKeyFromCurl = (curlText: string): string | null => {
   }
   return null;
 };
+
+const errorText = (error: unknown, fallback: string) => error instanceof Error ? error.message : fallback;
 
 const Settings = () => {
   const { t } = useLanguage();
@@ -238,11 +243,13 @@ const Settings = () => {
         try {
           const parsed = JSON.parse(text);
           if (parsed.message) errMsg = parsed.message;
-        } catch (_) {}
+        } catch {
+          // Keep the HTTP status when the response is not JSON.
+        }
         setSupabaseTestResult({ success: false, message: errMsg });
       }
-    } catch (err: any) {
-      setSupabaseTestResult({ success: false, message: err.message || "Failed to fetch. Check CORS or network status." });
+    } catch (err: unknown) {
+      setSupabaseTestResult({ success: false, message: errorText(err, "Failed to fetch. Check CORS or network status.") });
     } finally {
       setSupabaseTesting(false);
     }
@@ -272,11 +279,13 @@ const Settings = () => {
         try {
           const parsed = JSON.parse(text);
           if (parsed.error?.message) errMsg = parsed.error.message;
-        } catch (_) {}
+        } catch {
+          // Keep the HTTP status when the response is not JSON.
+        }
         setOpenaiTestResult({ success: false, message: errMsg });
       }
-    } catch (err: any) {
-      setOpenaiTestResult({ success: false, message: err.message || "Failed to connect to OpenAI." });
+    } catch (err: unknown) {
+      setOpenaiTestResult({ success: false, message: errorText(err, "Failed to connect to OpenAI.") });
     } finally {
       setOpenaiTesting(false);
     }
@@ -293,7 +302,9 @@ const Settings = () => {
     setGeminiTestResult(null);
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${activeKey.trim()}`);
+      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
+        headers: { "x-goog-api-key": activeKey.trim() },
+      });
       if (response.ok) {
         setGeminiTestResult({ success: true, message: "Gemini connection active!" });
       } else {
@@ -302,41 +313,22 @@ const Settings = () => {
         try {
           const parsed = JSON.parse(text);
           if (parsed.error?.message) errMsg = parsed.error.message;
-        } catch (_) {}
+        } catch {
+          // Keep the HTTP status when the response is not JSON.
+        }
         setGeminiTestResult({ success: false, message: errMsg });
       }
-    } catch (err: any) {
-      setGeminiTestResult({ success: false, message: err.message || "Failed to connect to Gemini." });
+    } catch (err: unknown) {
+      setGeminiTestResult({ success: false, message: errorText(err, "Failed to connect to Gemini.") });
     } finally {
       setGeminiTesting(false);
     }
   };
 
-  const handleBulkExport = () => {
-    const stored = localStorage.getItem("geostories-postcards");
-    if (!stored) {
-      alert("Nothing to export yet.");
-      return;
-    }
-
+  const handleBulkExport = async () => {
     try {
-      const postcards = JSON.parse(stored);
-      const fullArchive = postcards.map((card: any) => {
-        const assets: any = {};
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key?.startsWith(`eop-asset-${card.id}-`)) {
-            const presetId = key.split('-').pop()!;
-            assets[presetId] = JSON.parse(localStorage.getItem(key)!);
-          }
-        }
-        return { 
-          ...card, 
-          assets, 
-          exportedAt: new Date().toISOString(),
-          license: "CC BY-NC 4.0 (Open Educational Resource)" 
-        };
-      });
+      const postcards = await loadAllPostcards();
+      const fullArchive = createArchive(postcards);
 
       const blob = new Blob([JSON.stringify(fullArchive, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -344,6 +336,7 @@ const Settings = () => {
       a.href = url;
       a.download = `eop-full-archive-${new Date().toISOString().split('T')[0]}.json`;
       a.click();
+      URL.revokeObjectURL(url);
     } catch (err) {
       alert("Export failed.");
     }
@@ -357,14 +350,15 @@ const Settings = () => {
     reader.onload = (event) => {
       try {
         const resultText = event.target?.result as string;
-        const data = JSON.parse(resultText);
-        let importedPostcards: any[] = [];
+        const data: unknown = JSON.parse(resultText);
+        let importedPostcards: Array<Postcard & { assets?: Record<string, unknown> }> = [];
         
         if (Array.isArray(data)) {
-          importedPostcards = data;
+          importedPostcards = data as unknown as Array<Postcard & { assets?: Record<string, unknown> }>;
         } else if (data && typeof data === "object") {
-          if (data.id && data.title) {
-            importedPostcards = [data];
+          const candidate = data as Record<string, unknown>;
+          if (candidate.id && candidate.title) {
+            importedPostcards = [candidate as unknown as Postcard & { assets?: Record<string, unknown> }];
           } else {
             throw new Error("Invalid postcard format: Object must contain 'id' and 'title'.");
           }
@@ -373,32 +367,40 @@ const Settings = () => {
         }
 
         const stored = localStorage.getItem("geostories-postcards");
-        let currentPostcards: any[] = [];
+        let currentPostcards: Postcard[] = [];
         if (stored) {
-          currentPostcards = JSON.parse(stored);
+          const parsed: unknown = JSON.parse(stored);
+          if (Array.isArray(parsed)) currentPostcards = parsePostcards(parsed);
         }
 
-        importedPostcards.forEach((card: any) => {
-          if (card.assets && typeof card.assets === "object") {
-            Object.entries(card.assets).forEach(([presetId, assetVal]) => {
+        const validated = importedPostcards.map((card) => ({
+          card: parsePostcards(card)[0],
+          assets: card.assets
+            ? Object.fromEntries(Object.entries(card.assets).map(([presetId, asset]) => [presetId, parseSavedAsset(asset)]))
+            : undefined,
+        }));
+
+        validated.forEach(({ card, assets }) => {
+          if (assets && typeof assets === "object") {
+            Object.entries(assets).forEach(([presetId, assetVal]) => {
               localStorage.setItem(`eop-asset-${card.id}-${presetId}`, JSON.stringify(assetVal));
             });
           }
 
-          const { assets, exportedAt, license, ...cleanCard } = card;
-          const idx = currentPostcards.findIndex((c) => c.id === cleanCard.id);
+          setPostcardDeleted(card.id, false);
+          const idx = currentPostcards.findIndex((c) => c.id === card.id);
           if (idx > -1) {
-            currentPostcards[idx] = cleanCard;
+            currentPostcards[idx] = card;
           } else {
-            currentPostcards.push(cleanCard);
+            currentPostcards.push(card);
           }
         });
 
-        localStorage.setItem("geostories-postcards", JSON.stringify(currentPostcards));
+        localStorage.setItem(POSTCARDS_STORAGE_KEY, JSON.stringify(currentPostcards));
         alert(`Successfully imported ${importedPostcards.length} postcards and restored their AI assets!`);
         window.location.reload();
-      } catch (err: any) {
-        alert(`Failed to import JSON: ${err.message}`);
+      } catch (err: unknown) {
+        alert(`Failed to import JSON: ${errorText(err, "Invalid archive file.")}`);
       }
     };
     reader.readAsText(file);
@@ -408,7 +410,7 @@ const Settings = () => {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && (key === "geostories-postcards" || key.startsWith("eop-asset-"))) {
+      if (key && (key === POSTCARDS_STORAGE_KEY || key === DELETED_POSTCARDS_STORAGE_KEY || key.startsWith("eop-asset-"))) {
         keysToRemove.push(key);
       }
     }
@@ -467,7 +469,7 @@ const Settings = () => {
           {tab === "api" && (
             <>
               <p style={{ fontSize: "0.85rem", color: "var(--grey-3)", marginBottom: "28px", lineHeight: 1.6 }}>
-                All keys are stored locally in your browser. They are never sent anywhere except directly to the respective service. Leave a field blank to use the server default from <code style={{ fontFamily: "monospace", fontSize: "0.8rem", background: "var(--grey-5)", padding: "1px 5px", borderRadius: "3px" }}>.env</code>.
+                Keys are stored unencrypted in this browser profile and sent only to the configured provider; video requests pass the Gemini key through your Supabase function. Leave Supabase fields blank to use the values from <code style={{ fontFamily: "monospace", fontSize: "0.8rem", background: "var(--grey-5)", padding: "1px 5px", borderRadius: "3px" }}>.env</code>.
               </p>
 
               {/* Copy setup guide */}
@@ -552,7 +554,7 @@ const Settings = () => {
                           </div>
                         </div>
                         <p className="eop-field-hint">
-                          The <code style={{ fontFamily: "monospace", fontSize: "0.78rem", background: "var(--grey-5)", padding: "1px 5px", borderRadius: "3px" }}>anon</code> key from your Supabase project. Safe to use client-side.
+                          The publishable or legacy <code style={{ fontFamily: "monospace", fontSize: "0.78rem", background: "var(--grey-5)", padding: "1px 5px", borderRadius: "3px" }}>anon</code> key from your Supabase project. It is designed for clients only when Storage policies enforce the access you intend.
                         </p>
                         <div className="eop-input-wrapper">
                           <input
@@ -577,7 +579,7 @@ const Settings = () => {
                       <div className="eop-field" style={{ marginBottom: 8 }}>
                         <label className="eop-field-label">Storage Bucket</label>
                         <p className="eop-field-hint">
-                          Image uploads require a public <code style={{ fontFamily: "monospace", fontSize: "0.78rem", background: "var(--grey-5)", padding: "1px 5px", borderRadius: "3px" }}>postcards</code> bucket in your Supabase project. Copy the setup guide below and paste it into any AI assistant.
+                          Image playback requires a public <code style={{ fontFamily: "monospace", fontSize: "0.78rem", background: "var(--grey-5)", padding: "1px 5px", borderRadius: "3px" }}>postcards</code> bucket. Upload permission is controlled separately by Storage policies; avoid unrestricted anonymous uploads in production.
                         </p>
                         <button
                           type="button"
@@ -687,7 +689,7 @@ const Settings = () => {
                             className={`eop-provider-btn ${aiProvider === "openai" ? "active" : ""}`}
                             onClick={() => setAiProvider("openai")}
                           >
-                            OpenAI (GPT-4o)
+                            OpenAI
                           </button>
                           <button
                             type="button"
@@ -717,7 +719,7 @@ const Settings = () => {
                             Get one at{" "}
                             <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">
                               platform.openai.com
-                            </a>.
+                            </a>. This key is stored unencrypted in this browser profile; use a restricted project key.
                           </p>
                           <div className="eop-input-wrapper">
                             <input
@@ -817,7 +819,7 @@ const Settings = () => {
                             Get one at{" "}
                             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer">
                               Google AI Studio
-                            </a>. A Gemini API key is required to generate Cinematic Videos (Veo).
+                            </a>. This key is stored unencrypted in this browser profile. A restricted Gemini key is required for Veo video generation.
                           </p>
                           <div className="eop-input-wrapper">
                             <input
@@ -1099,4 +1101,3 @@ const Settings = () => {
 };
 
 export default Settings;
-

@@ -19,7 +19,7 @@
 
 ### 2. 🎓 Interactive AI Learning Hub (MOOC & Smart Tutor)
 - **Comprehensive MOOC Platform (`/learn`):** Structured educational modules covering digital archiving, no-code AI tools, prompt engineering, and ethical AI in heritage preservation.
-- **Interactive Quizzes & Certificates:** Module knowledge checks with instant grading, progress tracking, and certificate issuance.
+- **Interactive Quizzes & Progress:** Module knowledge checks with instant grading and browser-based progress tracking.
 - **Persistent AI Smart Tutor Chatbot:** Floating AI assistant integrated across the platform to answer learner queries and explain historical archiving concepts interactively.
 
 ### 3. 🛠️ Heritage Preservation No-Code AI Archiving Tools
@@ -34,7 +34,7 @@
 - **Frontend Core:** React 18, TypeScript, Vite
 - **UI & Styling:** Tailwind CSS, shadcn/ui, Lucide Icons
 - **Mapping & Geolocation:** Google Maps JavaScript API with `@googlemaps/markerclusterer`
-- **AI Services & Integrations:** OpenAI API (GPT-4o, DALL-E/Imagen), Supabase Edge Functions (Edge Deno runtime), Web Speech API
+- **AI Services & Integrations:** OpenAI and Gemini APIs, Supabase Edge Functions (Edge Deno runtime), Web Speech API
 - **State Management & Data:** `@tanstack/react-query`, `react-router-dom`, `react-helmet-async`
 
 ---
@@ -79,7 +79,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
 VITE_GOOGLE_MAPS_API_KEY=<optional-default-maps-key>
 ```
 
-> **Note:** Platform settings can also be configured interactively at runtime via the **Settings (`/settings`)** dashboard, where keys are stored securely in browser `localStorage`.
+> **Note:** Platform settings can also be configured interactively at runtime via the **Settings (`/settings`)** dashboard. Keys stored in browser `localStorage` are readable by scripts running on the same origin; use a dedicated browser profile and restricted API keys.
 
 ---
 
@@ -96,9 +96,6 @@ To deploy Edge Functions to your Supabase project:
 ```bash
 # Link to your Supabase project
 npx supabase link --project-ref <your-project-ref>
-
-# Set OpenAI secret key
-npx supabase secrets set OPENAI_API_KEY=<your-openai-key>
 
 # Deploy functions
 npx supabase functions deploy generate-story

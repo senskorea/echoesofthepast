@@ -125,7 +125,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem("eop-language", newLang);
   };
 
-  const t = (key: keyof typeof translations) => {
+  const t = (key: string): string => {
     return translations[key]?.[lang] || translations[key]?.en || key;
   };
 
