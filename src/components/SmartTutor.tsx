@@ -4,7 +4,7 @@ import { generateText } from "../lib/ai-service";
 import { TEXT_MODELS } from "../lib/ai-models";
 import { friendlyError } from "../lib/service-errors";
 import { useLanguage } from "../lib/i18n";
-import { getAIConfig } from "../lib/supabase-config";
+import { getAIConfig, isCreationEnabled } from "../lib/supabase-config";
 import { Module, DEFAULT_SMART_TUTOR_CONTEXT } from "../data/learning-content";
 
 interface Message {
@@ -54,7 +54,7 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
       const { provider } = getAIConfig();
       const modelId = TEXT_MODELS.find(m => m.provider === provider)?.id || TEXT_MODELS[0].id;
       
-      const customContext = DEFAULT_SMART_TUTOR_CONTEXT;
+      const customContext = DEFAULT_SMART_TUTOR_CONTEXT + `\nCurrent tool availability: text=${isCreationEnabled('text')}, image=${isCreationEnabled('image')}, video=${isCreationEnabled('video')}, narration=${isCreationEnabled('audio')}. Answer in ${lang === 'ro' ? 'Romanian' : lang === 'fr' ? 'French' : 'English'}.`;
       
       let systemPrompt = `${customContext}\n\nCURRENT CONTEXT:\nYou are currently assisting the learner in the "${activeModule?.title || "Main Dashboard"}" section of the MOOC.`;
       
