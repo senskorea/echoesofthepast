@@ -9,7 +9,7 @@ async function providerFetch(url: string, init: RequestInit, fetcher: typeof fet
     // Record only bounded diagnostics, never raw provider messages or credentials.
     const details = JSON.stringify(failure.error?.details || []);
     console.error(JSON.stringify({providerStatus:response.status,quotaZero:/"quotaValue"\s*:\s*"?0"?/.test(details),billingRequired:/billing|paid tier/i.test(failure.error?.message || '')}));
-    throw new GatewayError(response.status===429 ? 'limit' : response.status===400 ? 'refused' : 'unavailable', response.status===429 ? 429 : 503);
+    throw new GatewayError(response.status===429 ? 'limit' : response.status===400 ? 'refused' : response.status===503 ? 'provider_busy' : 'unavailable', response.status===429 ? 429 : 503);
   }
   return response;
 }

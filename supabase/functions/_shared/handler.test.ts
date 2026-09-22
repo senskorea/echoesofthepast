@@ -41,3 +41,9 @@ it('cannot poll another visitor job',async()=>{
   const response=await createGateway(k=>env[k])(request({action:'poll',requestId:id,jobId:id}));
   expect(response.status).toBe(404);expect(String(mock.mock.calls[1][0])).toContain(`owner_id=eq.${owner}`);expect(mock).toHaveBeenCalledTimes(2);
 });
+it('marks cached failures terminal without calling the provider again',async()=>{
+  const mock=vi.fn(async(url:RequestInfo|URL)=>String(url).includes('/auth/v1/user') ? Response.json({id:owner}) : Response.json({cached:true,job:{status:'failed',error_code:'unavailable'}}));vi.stubGlobal('fetch',mock);
+  const response=await createGateway(k=>env[k])(request());
+  expect(await response.json()).toEqual({code:'unavailable',requestId:id,terminal:true});
+  expect(mock).toHaveBeenCalledTimes(2);
+});

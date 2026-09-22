@@ -26,7 +26,14 @@ export async function callService<T>(body: Record<string, unknown>, requestId?: 
     });
   } catch { throw new ServiceError('network', requestId); }
   const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw responseError(response.status, result.code, requestId);
+  if (!response.ok) {
+    // A confirmed failure can be retried explicitly; uncertain or pending work
+    // must keep its ID to avoid duplicate paid requests.
+    if (body.action !== 'poll' && (result.terminal === true || result.code === 'provider_busy')) {
+      try { localStorage.removeItem(key); } catch { /* Safe to keep the old ID. */ }
+    }
+    throw responseError(response.status, result.code, requestId);
+  }
   if (body.action !== 'poll') { try { localStorage.removeItem(key); } catch { /* Cached server result remains safe. */ } }
   return result as T;
 }

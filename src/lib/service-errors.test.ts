@@ -6,5 +6,5 @@ it('does not expose raw errors to visitors',()=>{
 });
 it('provides all languages for service errors',()=>{
   for (const lang of ['en','ro','fr'] as const) expect(friendlyError(new ServiceError('limit'),lang)).toBeTruthy();
-  expect(friendlyError(new ServiceError('unavailable'),'fr')).toContain('temporairement');
+  expect(friendlyError(new ServiceError('unavailable'),'fr')).toContain('pour le moment');
 });

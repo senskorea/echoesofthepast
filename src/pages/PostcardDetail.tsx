@@ -1082,7 +1082,7 @@ const PostcardDetail = () => {
                           />
                         </div>
 
-                        {!creationAvailable && <p role="status" style={{fontSize:'0.85rem',marginBottom:12}}>{friendlyError(new ServiceError('unavailable'),lang)}</p>}
+                        {!creationAvailable && <p role="status" style={{fontSize:'0.85rem',marginBottom:12}}>{friendlyError(new ServiceError('disabled'),lang)}</p>}
                         <p style={{fontSize:'0.75rem',marginBottom:12}}>{lang === 'ro' ? 'Până la 5 cereri AI pe zi în acest browser. Analiza și îmbunătățirea instrucțiunilor sunt incluse.' : lang === 'fr' ? "Jusqu’à 5 demandes d’IA par jour dans ce navigateur. L’analyse et l’amélioration des instructions sont incluses." : 'Up to 5 AI requests per day in this browser. Analysis and prompt polishing count too.'}</p>
                         <button
                           className="eop-btn-primary pd-generate-btn"

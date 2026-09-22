@@ -93,7 +93,8 @@ return async (req: Request) => {
     if (reservation.cached) {
       const job=reservation.job;
       if (job.status==='complete' || (job.status==='pending' && job.action==='video')) return reply(job.result);
-      throw new GatewayError(job.status==='failed' ? job.error_code || 'unavailable' : 'busy',409);
+      if (job.status==='failed') return reply({code:job.error_code || 'unavailable',requestId,terminal:true},503);
+      throw new GatewayError('busy',409);
     }
     try {
       const output=input.action==='upload' ? {bytes:Uint8Array.from(atob(input.base64Image!),c=>c.charCodeAt(0)),mime:input.mimeType!} : await generate(input,env);

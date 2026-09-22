@@ -37,3 +37,11 @@ describe('central AI adapter',()=>{
     await expect(callService({action:'text'})).rejects.toMatchObject({code:'unavailable'});
   });
 });
+it.each([{code:'provider_busy'}, {code:'unavailable',terminal:true}])('allows an explicit retry after a confirmed failure: %j', async failure => {
+  const mock=vi.fn().mockResolvedValueOnce(Response.json(failure,{status:503})).mockResolvedValueOnce(Response.json({text:'answer'}));
+  vi.stubGlobal('fetch',mock);
+  await expect(generateText('retry me','gemini-3.6-flash')).rejects.toBeInstanceOf(Error);
+  expect(mock).toHaveBeenCalledTimes(1);
+  await generateText('retry me','gemini-3.6-flash');
+  expect(JSON.parse(mock.mock.calls[0][1].body).requestId).not.toBe(JSON.parse(mock.mock.calls[1][1].body).requestId);
+});

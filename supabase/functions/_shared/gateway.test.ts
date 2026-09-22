@@ -58,3 +58,11 @@ it('rejects oversized model input before paid generation',async()=>{
  expect(mock).toHaveBeenCalledTimes(1);
  expect((mock.mock.calls[0] as unknown as [string])[0]).toContain(':countTokens');
 });
+it('distinguishes provider outages without exposing raw provider messages',async()=>{
+  const mock=vi.fn(async()=>Response.json({error:{message:'private provider details'}},{status:503}));
+  const log=vi.spyOn(console,'error').mockImplementation(()=>{});
+  try {
+    await expect(generate({action:'text',requestId,prompt:'history',modelId:'gemini-3.6-flash'},()=> 'server-secret',mock)).rejects.toMatchObject({code:'provider_busy',status:503});
+    expect(mock).toHaveBeenCalledTimes(1);
+  } finally {log.mockRestore();}
+});
