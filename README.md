@@ -36,7 +36,7 @@ Set these in the ignored root `.env`, then restart Vite:
 | `VITE_CENTRAL_SERVICES_ENABLED` | `false` until hosted service checks pass. |
 | `VITE_IMAGE_ENABLED`, `VITE_VIDEO_ENABLED`, `VITE_NARRATION_ENABLED`, `VITE_OPENAI_ENABLED` | Enable only verified, funded media/providers; default false. |
 | `VITE_AI_PROVIDER` | `gemini` by default, or `openai`. |
-| `VITE_GOOGLE_MAPS_API_KEY` | Maps browser key restricted to approved domains and the Maps JavaScript API. |
+
 
 **Every `VITE_` value is public in the website bundle.** Gemini, OpenAI and service-role secrets belong only in the backend. Old browser API settings are ignored. Narration uses OpenAI; video uses Gemini, regardless of the selected default provider.
 
@@ -64,7 +64,7 @@ Tests cover frontend failures, request reuse, provider adapters, handler access 
 - **Daily allowance reached:** wait for the next UTC day. Failed requests can consume allowance because a provider may have processed them.
 - **Video takes too long:** use **Check video progress** to check the existing job. Do not repeatedly start new jobs.
 - **Browser cannot save:** download your work before freeing browser storage. Import validates the full archive before applying changes.
-- **Map unavailable:** the operator needs to configure its restricted Maps key; the gallery remains usable.
+- **Map images unavailable:** check your internet connection. The map uses Leaflet with OpenStreetMap tiles and needs no API key. Markers and the gallery remain available if tile loading fails.
 - **Local changes missing elsewhere:** work is browser-local. Export and import to transfer it.
 
 ## Deployment

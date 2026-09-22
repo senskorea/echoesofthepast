@@ -1,204 +1,84 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { MarkerClusterer } from "@googlemaps/markerclusterer";
+import { useEffect, useRef, useState } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { useNavigate } from "react-router-dom";
 import { Postcard } from "@/types/postcard";
-import { Loader2, Home } from "lucide-react";
 
-interface MapViewProps {
-  postcards: Postcard[];
-}
+interface MapViewProps { postcards: Postcard[] }
 
-const MapView = ({ postcards }: MapViewProps) => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const clustererRef = useRef<MarkerClusterer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showKeyInput, setShowKeyInput] = useState(false);
+export default function MapView({ postcards }: MapViewProps) {
+  const container = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const boundsRef = useRef<L.LatLngBounds | null>(null);
+  const clusterRef = useRef<L.MarkerClusterGroup | null>(null);
+  const [tileError, setTileError] = useState(false);
   const navigate = useNavigate();
 
-  const updateMarkers = useCallback(async () => {
-    if (!mapInstanceRef.current) return;
-
-    try {
-      const { AdvancedMarkerElement } = (await google.maps.importLibrary("marker")) as google.maps.MarkerLibrary;
-
-      // Clear existing markers
-      markersRef.current.forEach(marker => {
-        marker.map = null;
-      });
-      markersRef.current = [];
-
-      // Clear existing clusterer
-      if (clustererRef.current) {
-        clustererRef.current.clearMarkers();
-      }
-
-      // Create new markers
-      const markers = postcards.map((postcard) => {
-        const markerContent = document.createElement("div");
-        markerContent.className = "custom-marker";
-        markerContent.innerHTML = `
-          <div class="w-12 h-12 bg-accent rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-110 transition-transform duration-300 border-2 border-primary/20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
-          </div>
-        `;
-
-        const marker = new AdvancedMarkerElement({
-          map: mapInstanceRef.current,
-          position: { lat: postcard.latitude, lng: postcard.longitude },
-          content: markerContent,
-          title: postcard.title,
-        });
-
-        marker.addListener("click", () => {
-          navigate(`/postcards/${postcard.id}`);
-        });
-
-        return marker;
-      });
-
-      markersRef.current = markers;
-
-      // Add marker clustering
-      clustererRef.current = new MarkerClusterer({
-        markers,
-        map: mapInstanceRef.current,
-      });
-    } catch (error) {
-      console.error("Error updating markers:", error);
-    }
-  }, [navigate, postcards]);
-
-  const initializeMap = useCallback(async (key: string) => {
-    if (!mapRef.current) return;
-
-    try {
-      // Use Google's Dynamic Library Import bootstrap loader (current recommended approach).
-      // This replaces the old script-tag approach and avoids the v=beta deprecation.
-      if (!window.google?.maps?.importLibrary) {
-        await new Promise<void>((resolve, reject) => {
-          const MARKER_ATTR = 'data-geostories-maps';
-
-          // Don't inject twice — if the loader is already in the DOM, just wait
-          if (document.querySelector(`script[${MARKER_ATTR}]`)) {
-            const timer = setInterval(() => {
-              if (window.google?.maps?.importLibrary) { clearInterval(timer); resolve(); }
-            }, 100);
-            setTimeout(() => { clearInterval(timer); reject(new Error('Google Maps load timeout')); }, 10000);
-            return;
-          }
-
-          // Inject Google's official inline bootstrap loader (v=weekly = stable channel)
-          const script = document.createElement('script');
-          script.setAttribute(MARKER_ATTR, '1');
-          script.textContent = `(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src="https://maps."+c+"apis.com/maps/api/js?"+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({key:${JSON.stringify(key)},v:"weekly"});`;
-          document.head.appendChild(script);
-
-          const timer = setInterval(() => {
-            if (window.google?.maps?.importLibrary) { clearInterval(timer); resolve(); }
-          }, 100);
-          // 10-second guard so the spinner can never hang indefinitely
-          setTimeout(() => {
-            clearInterval(timer);
-            reject(new Error('Google Maps failed to load. Check your API key and that billing is enabled.'));
-          }, 10000);
-        });
-      }
-
-      const { Map } = (await google.maps.importLibrary("maps")) as google.maps.MapsLibrary;
-
-      // DEMO_MAP_ID is Google's official placeholder — it enables Advanced Markers
-      // without requiring a Cloud-registered Map ID. For production, create your own
-      // at console.cloud.google.com → Google Maps Platform → Map IDs.
-      const map = new Map(mapRef.current, {
-        center: { lat: 48.8584, lng: 2.2945 },
-        zoom: 5,
-        mapId: "DEMO_MAP_ID",
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: true,
-      });
-
-      mapInstanceRef.current = map;
-
-      // Reveal the map immediately — marker failures won't block the UI
-      setIsLoading(false);
-      await updateMarkers();
-    } catch (error) {
-      console.error("Error loading Google Maps:", error);
-      setIsLoading(false);
-      setShowKeyInput(true);
-    }
-  }, [updateMarkers]);
+  useEffect(() => {
+    if (!container.current) return;
+    const map = L.map(container.current, { scrollWheelZoom: false }).setView([48, 15], 4);
+    mapRef.current = map;
+    map.attributionControl.setPosition("bottomleft");
+    const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
+    }).addTo(map);
+    tiles.on("tileerror", () => setTileError(true));
+    tiles.on("tileload", () => setTileError(false));
+    const clusters = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 45 });
+    map.addLayer(clusters);
+    clusterRef.current = clusters;
+    const resize = new ResizeObserver(() => map.invalidateSize());
+    resize.observe(container.current);
+    return () => {
+      resize.disconnect();
+      map.remove();
+      mapRef.current = null;
+      clusterRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
-    const configuredKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-    if (configuredKey) {
-      void initializeMap(configuredKey);
-    } else {
-      setShowKeyInput(true);
-      setIsLoading(false);
+    const map = mapRef.current, clusters = clusterRef.current;
+    if (!map || !clusters) return;
+    clusters.clearLayers();
+    const bounds = L.latLngBounds([]);
+    for (const card of postcards) {
+      if (!Number.isFinite(card.latitude) || !Number.isFinite(card.longitude)) continue;
+      bounds.extend([card.latitude, card.longitude]);
+      const icon = L.divIcon({ className: "postcard-map-pin", html: '<span aria-hidden="true">●</span>', iconSize: [30, 30], iconAnchor: [15, 15] });
+      const marker = L.marker([card.latitude, card.longitude], { icon, title: card.title, alt: card.title });
+      const link = document.createElement("a");
+      link.textContent = card.title;
+      link.href = `${import.meta.env.BASE_URL}postcards/${encodeURIComponent(card.id)}`;
+      link.addEventListener("click", event => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        navigate(`/postcards/${encodeURIComponent(card.id)}`);
+      });
+      marker.bindPopup(link);
+      clusters.addLayer(marker);
     }
-  }, [initializeMap]);
+    boundsRef.current = bounds.isValid() ? bounds : null;
+    if (bounds.isValid()) map.fitBounds(bounds, { padding: [36, 36], maxZoom: 13, animate: false });
+  }, [postcards, navigate]);
 
-  useEffect(() => {
-    if (mapInstanceRef.current && window.google?.maps) void updateMarkers();
-  }, [postcards, updateMarkers]);
-  const handleResetView = () => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setCenter({ lat: 48.8584, lng: 2.2945 });
-      mapInstanceRef.current.setZoom(5);
-    }
+  const reset = () => {
+    const map = mapRef.current;
+    if (map && boundsRef.current) map.fitBounds(boundsRef.current, { padding: [36, 36], maxZoom: 13, animate: false });
+    else map?.setView([48, 15], 4);
   };
 
-
-  if (showKeyInput) {
-    return <div role="status" className="p-8 text-center">
-      <h2 className="text-xl mb-3">Map temporarily unavailable</h2>
-      <p>You can still explore all postcards using the Gallery button above.</p>
-    </div>;
-  }
-
-  return (
-    <div className="relative h-screen w-full">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 text-accent animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground font-body">Loading historical map...</p>
-          </div>
-        </div>
-      )}
-      <div ref={mapRef} className="w-full h-full" />
-      
-      {/* Reset View Button */}
-      <div className="absolute bottom-6 right-6 z-10 flex flex-col gap-2">
-        <button
-          onClick={handleResetView}
-          title="Reset View"
-          className="w-12 h-12 flex items-center justify-center rounded-full bg-card border border-border shadow-lg text-primary hover:text-accent hover:border-accent transition-all active:scale-95"
-        >
-          <Home className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Elegant overlay header */}
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10">
-        <div className="vintage-card px-8 py-4 backdrop-blur-sm bg-card/95">
-          <h1 className="font-heading text-3xl font-bold text-primary">
-            GeoStories
-          </h1>
-          <p className="text-sm text-muted-foreground font-body mt-1">
-            Mapping History, One Story at a Time
-          </p>
-        </div>
-      </div>
+  return <div className="postcard-map">
+    <div className="postcard-map-toolbar">
+      <p>Select a marker to open its postcard. Numbered circles group nearby postcards.</p>
+      <button type="button" onClick={reset}>Show all postcards</button>
     </div>
-  );
-};
-
-export default MapView;
+    {tileError && <p role="status" className="postcard-map-notice">Some map images could not load. Check your connection or try again later; postcard markers and the Gallery remain available.</p>}
+    {!postcards.length && <p role="status" className="postcard-map-notice">No postcards match your search. Clear the search to see them on the map.</p>}
+    <div ref={container} className="postcard-map-canvas" aria-label="Map of historical postcards" />
+  </div>;
+}

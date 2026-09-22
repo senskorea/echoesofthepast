@@ -37,7 +37,7 @@ For a bounded smoke test, enable only the necessary action limits and set the se
 
 ## 4. GitHub Pages cutover
 
-Set repository Actions secrets `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, and `VITE_GOOGLE_MAPS_API_KEY` (the latter restricted to the Pages domain and Maps JavaScript API). These values are public in the built site, even though GitHub stores them as secrets.
+Set repository Actions secrets `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. These values are public in the built site, even though GitHub stores them as secrets.
 
 Set repository variables `VITE_AI_PROVIDER=gemini` (or `openai`) and `VITE_CENTRAL_SERVICES_ENABLED=true` only after hosted checks pass. Narration needs OpenAI and video needs Gemini regardless of this default. Merge the reviewed migration into main; the Pages workflow checks and deploys it. Verify direct routes, clean-browser anonymous use, English/Romanian/French errors and existing archives on the deployed URL.
 
@@ -66,3 +66,7 @@ Enabled text reserves EUR 0.25 per request, with total Gemini input capped at 32
 The global row allows EUR 50 in reservations daily across visitors; failures retain reservations, so service may stop earlier than actual spending warrants. This does not cap unrelated account activity, exchange-rate extremes, taxes outside the margin or hosting bills. Text also has a 200-request global daily ceiling. Uploads: 5 per visitor and 100 globally daily, JPEG/PNG/WebP only, maximum 5 MiB. Anonymous identity is browser-based and can be reset; only the shared budget resists that bypass.
 
 Set GitHub variables `VITE_IMAGE_ENABLED`, `VITE_VIDEO_ENABLED`, `VITE_NARRATION_ENABLED`, `VITE_OPENAI_ENABLED` to true only after their respective service tests pass and matching backend limits are enabled. The current release sets all four false. The Gemini-only model selector avoids offering unfunded OpenAI models.
+
+## Map tiles
+
+The map uses Leaflet and OpenStreetMap standard tiles, with visible attribution and normal browser caching. No map API key is required. Do not add bulk downloads, offline prefetching, or a no-referrer policy for tile requests. Review https://operations.osmfoundation.org/policies/tiles/ before scaling traffic; the community tile service has no availability guarantee.

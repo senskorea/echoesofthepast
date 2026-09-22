@@ -55,7 +55,6 @@ jobs:
           VITE_NARRATION_ENABLED: ${{ vars.VITE_NARRATION_ENABLED || 'false' }}
           VITE_OPENAI_ENABLED: ${{ vars.VITE_OPENAI_ENABLED || 'false' }}
           VITE_AI_PROVIDER: ${{ vars.VITE_AI_PROVIDER || 'gemini' }}
-          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v5
