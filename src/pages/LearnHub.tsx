@@ -105,9 +105,9 @@ const LearnHub = () => {
         </nav>
       </header>
 
-      <div className="pd-layout" style={{ maxWidth: 1000, margin: "40px auto 80px", padding: "0 24px" }}>
+      <div className="learn-layout">
         {/* ── HERO ── */}
-        <div style={{ marginBottom: 48, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div className="learn-header">
           <div>
             <p className="eop-label" style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <GraduationCap style={{ width: 14, height: 14 }} /> Erasmus+ Learning Hub
@@ -159,8 +159,8 @@ const LearnHub = () => {
               <ArrowLeft style={{ width: 16, height: 16 }} /> Back to Curriculum
             </button>
 
-            <div style={{ background: "white", borderRadius: 20, border: "1px solid var(--grey-5)", padding: 32, boxShadow: "0 10px 30px rgba(0,0,0,0.03)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
+            <div className="learn-module-detail">
+              <div className="learn-module-header">
                 <div>
                   <p className="eop-label">Module {selectedModule.number}</p>
                   <h2 style={{ fontSize: "1.8rem", fontWeight: 500, fontFamily: "var(--font-serif)" }}>{selectedModule.title}</h2>
@@ -309,7 +309,7 @@ const LearnHub = () => {
           </div>
         ) : (
           /* ── DASHBOARD GRID ── */
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
+          <div className="learn-modules">
             {PUBLISHED_MODULES.map(module => {
               const isCompleted = completedModules.includes(module.id);
               return (

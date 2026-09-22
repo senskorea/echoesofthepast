@@ -1,74 +1,63 @@
-import { Link } from "react-router-dom";
 import { useLanguage } from "@/lib/i18n";
 
+const repository = "https://github.com/senskorea/echoesofthepast";
 const guides = {
   en: {
-    title: "Start here: a quick guide",
-    intro: "New to GeoStories? Follow these five steps at your own pace.",
+    title: "Quick start: download & install",
+    intro: "The platform’s source code is available on GitHub. Download it to run your own local copy. To use this public website, no installation is needed.",
     steps: [
-      ["Explore the archive", "Search for a place or open a postcard in Gallery to read its story. Use Map when it is available."],
-      ["Learn the basics", "Choose a module below, watch its lessons or read the transcripts, and try the quiz. Mark a module complete when you have finished it."],
-      ["Try the AI tools", "Open a postcard, choose a type of creation, review the prompt and select Generate. Check the result: AI can invent details, so verify historical claims against reliable sources."],
-      ["Keep your work", "Use Save to Creations for a result you want to keep, and Download File for a copy on your device. Export your postcard archive from Settings for a backup."],
-      ["Ask for help", "Open the chat bubble to ask the Smart Tutor a question when the AI service is available. If an action fails, keep your text and try again later; the archive and lessons are still available."],
+      ["Download the code", "Open the GitHub repository, select Code → Download ZIP, then extract the folder. You can also clone the repository using Git."],
+      ["Prepare your computer", "Install Node.js 22.12 or newer within the Node 22 release line, which includes npm. Open a terminal in the extracted project folder."],
+      ["Install and configure", "Run npm ci. Copy .env.example to a new file named .env in the project folder; keep any existing .env file. The gallery, lessons and quizzes work without cloud credentials."],
+      ["Start the website", "Run npm run dev and open the local address shown in the terminal (usually http://localhost:8080). Keep the terminal running while you use your local copy."],
     ],
-    storage: "Your edits, saved creations and learning progress stay in this browser. They do not automatically appear on another device or publish to everyone's archive. Export your postcards before clearing browser data; learning progress is not included in that backup.",
-    availability: "AI creation, uploads and the map depend on online services. You can make up to five AI requests per day in this browser; analysis, tutor replies and prompt polishing count too. Some media tools may be temporarily unavailable. You do not need to enter API keys. You can start with the gallery and learning modules.",
-    archive: "Explore the archive", backup: "Open backup settings",
+    note: "Want AI generation in your own installation? Follow the deployment guide to configure your organisation’s Supabase backend and shared AI services. Gemini and OpenAI secret keys belong in the backend, never in VITE_ variables or the public repository.",
+    repo: "Get the code on GitHub", readme: "Read the full README", deploy: "Backend & deployment guide", commands: "In your project folder",
   },
   ro: {
-    title: "Începe aici: ghid rapid",
-    intro: "Ești la început cu GeoStories? Urmează acești cinci pași în ritmul tău.",
+    title: "Ghid rapid: descărcare și instalare",
+    intro: "Codul sursă al platformei este disponibil pe GitHub. Descarcă-l pentru a rula o copie locală. Acest site public poate fi folosit fără instalare.",
     steps: [
-      ["Explorează arhiva", "Caută un loc sau deschide o carte poștală din galerie pentru a-i citi povestea. Folosește harta când este disponibilă."],
-      ["Învață noțiunile de bază", "Alege un modul de mai jos, urmărește lecțiile sau citește transcrierile și răspunde la chestionar. Marchează modulul ca finalizat după ce l-ai parcurs."],
-      ["Încearcă instrumentele AI", "Deschide o carte poștală, alege un tip de creație, verifică instrucțiunile și apasă Generate. Verifică rezultatul: AI poate inventa detalii, așa că verifică afirmațiile istorice în surse de încredere."],
-      ["Păstrează-ți munca", "Folosește Save to Creations pentru a păstra un rezultat și Download File pentru o copie pe dispozitiv. Exportă arhiva cărților poștale din Setări pentru o copie de siguranță."],
-      ["Cere ajutor", "Deschide fereastra de chat pentru a întreba tutorele, când serviciul AI este disponibil. Dacă o acțiune eșuează, păstrează textul și încearcă mai târziu; arhiva și lecțiile rămân disponibile."],
+      ["Descarcă codul", "Deschide depozitul GitHub, alege Code → Download ZIP și dezarhivează folderul. Poți clona depozitul și cu Git."],
+      ["Pregătește calculatorul", "Instalează Node.js din seria 22, versiunea 22.12 sau mai nouă, care include npm. Deschide un terminal în folderul proiectului dezarhivat."],
+      ["Instalează și configurează", "Rulează npm ci. Copiază .env.example într-un fișier nou numit .env în folderul proiectului; păstrează orice fișier .env existent. Galeria, lecțiile și chestionarele funcționează fără credențiale cloud."],
+      ["Pornește site-ul", "Rulează npm run dev și deschide adresa locală afișată în terminal (de obicei http://localhost:8080). Lasă terminalul deschis cât timp folosești copia locală."],
     ],
-    storage: "Modificările, creațiile salvate și progresul rămân în acest browser. Nu apar automat pe alt dispozitiv și nu sunt publicate în arhiva tuturor. Exportă cărțile poștale înainte de a șterge datele browserului; progresul lecțiilor nu este inclus în acea copie.",
-    availability: "Crearea cu AI, încărcările și harta depind de servicii online. Poți trimite până la cinci cereri AI pe zi în acest browser; analiza, răspunsurile tutorelui și îmbunătățirea instrucțiunilor sunt incluse. Unele instrumente media pot fi temporar indisponibile. Nu trebuie să introduci chei API. Poți începe cu galeria și modulele de învățare.",
-    archive: "Explorează arhiva", backup: "Deschide setările pentru backup",
+    note: "Pentru generare AI în propria instalare, urmează ghidul de implementare pentru a configura backend-ul Supabase și serviciile AI ale organizației. Cheile secrete Gemini și OpenAI se păstrează în backend, niciodată în variabile VITE_ sau în depozitul public.",
+    repo: "Descarcă de pe GitHub", readme: "Citește README", deploy: "Ghid backend și implementare", commands: "În folderul proiectului",
   },
   fr: {
-    title: "Commencez ici : guide rapide",
-    intro: "Vous découvrez GeoStories ? Suivez ces cinq étapes à votre rythme.",
+    title: "Démarrage rapide : télécharger et installer",
+    intro: "Le code source de la plateforme est disponible sur GitHub. Téléchargez-le pour exécuter votre propre copie locale. Aucune installation n’est nécessaire pour utiliser ce site public.",
     steps: [
-      ["Explorez les archives", "Recherchez un lieu ou ouvrez une carte postale dans la galerie pour lire son histoire. Utilisez la carte lorsqu'elle est disponible."],
-      ["Apprenez les bases", "Choisissez un module ci-dessous, regardez les leçons ou lisez les transcriptions, puis répondez au quiz. Marquez le module comme terminé lorsque vous l'avez parcouru."],
-      ["Essayez les outils d'IA", "Ouvrez une carte postale, choisissez un type de création, relisez les instructions et sélectionnez Generate. Vérifiez le résultat : l'IA peut inventer des détails. Consultez des sources fiables pour les affirmations historiques."],
-      ["Conservez votre travail", "Utilisez Save to Creations pour conserver un résultat et Download File pour une copie sur votre appareil. Exportez vos cartes postales depuis les paramètres pour en garder une sauvegarde."],
-      ["Demandez de l'aide", "Ouvrez la bulle de discussion pour poser une question au tuteur lorsque le service d'IA est disponible. Si une action échoue, gardez votre texte et réessayez plus tard ; les archives et les leçons restent disponibles."],
+      ["Télécharger le code", "Ouvrez le dépôt GitHub, choisissez Code → Download ZIP, puis décompressez le dossier. Vous pouvez aussi cloner le dépôt avec Git."],
+      ["Préparer votre ordinateur", "Installez Node.js de la série 22, version 22.12 ou ultérieure, qui inclut npm. Ouvrez un terminal dans le dossier du projet décompressé."],
+      ["Installer et configurer", "Exécutez npm ci. Copiez .env.example dans un nouveau fichier nommé .env à la racine du projet ; conservez tout fichier .env existant. La galerie, les leçons et les quiz fonctionnent sans identifiants cloud."],
+      ["Lancer le site", "Exécutez npm run dev et ouvrez l’adresse locale affichée dans le terminal (généralement http://localhost:8080). Gardez le terminal ouvert pendant l’utilisation de votre copie locale."],
     ],
-    storage: "Vos modifications, créations enregistrées et progrès restent dans ce navigateur. Ils n'apparaissent pas automatiquement sur un autre appareil et ne sont pas publiés dans les archives de tous. Exportez vos cartes postales avant d'effacer les données du navigateur ; les progrès des leçons ne sont pas inclus dans cette sauvegarde.",
-    availability: "La création par IA, les envois de fichiers et la carte dépendent de services en ligne. Vous disposez de cinq demandes d’IA par jour dans ce navigateur ; l’analyse, les réponses du tuteur et l’amélioration des instructions sont incluses. Certains outils multimédias peuvent être temporairement indisponibles. Vous ne devez pas saisir de clés API. Vous pouvez commencer par la galerie et les modules.",
-    archive: "Explorer les archives", backup: "Ouvrir les paramètres de sauvegarde",
+    note: "Pour activer la génération par IA dans votre installation, suivez le guide de déploiement pour configurer le backend Supabase et les services d’IA de votre organisation. Les clés secrètes Gemini et OpenAI restent dans le backend, jamais dans les variables VITE_ ou le dépôt public.",
+    repo: "Obtenir le code sur GitHub", readme: "Lire le README complet", deploy: "Guide backend et déploiement", commands: "Dans le dossier du projet",
   },
 };
 
 export default function QuickStartGuide() {
   const { lang } = useLanguage();
   const guide = guides[lang];
-
   return (
-    <details open className="mb-8 rounded-2xl border border-[var(--grey-5)] bg-white p-5 sm:p-7">
-      <summary className="cursor-pointer text-lg font-semibold text-[var(--grey-1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">
-        {guide.title}
-      </summary>
-      <p className="mt-3 text-sm leading-relaxed text-[var(--grey-2)]">{guide.intro}</p>
-      <ol className="mt-5 list-decimal space-y-4 pl-5 text-sm leading-relaxed text-[var(--grey-2)]">
-        {guide.steps.map(([title, text]) => (
-          <li key={title} className="pl-1">
-            <strong className="text-[var(--grey-1)]">{title}.</strong> {text}
-          </li>
-        ))}
-      </ol>
-      <p className="mt-5 rounded-lg bg-[var(--grey-6)] p-4 text-sm leading-relaxed text-[var(--grey-2)]">{guide.storage}</p>
-      <p className="mt-3 text-sm leading-relaxed text-[var(--grey-2)]">{guide.availability}</p>
-      <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold">
-        <Link to="/" className="underline underline-offset-4">{guide.archive}</Link>
-        <Link to="/settings" className="underline underline-offset-4">{guide.backup}</Link>
+    <details open className="learn-guide">
+      <summary>{guide.title}</summary>
+      <p>{guide.intro}</p>
+      <div className="learn-guide-links">
+        <a href={repository} target="_blank" rel="noopener noreferrer">{guide.repo} ↗</a>
+        <a href={`${repository}/blob/main/README.md`} target="_blank" rel="noopener noreferrer">{guide.readme} ↗</a>
       </div>
+      <ol>
+        {guide.steps.map(([title, text]) => <li key={title}><strong>{title}</strong><p>{text}</p></li>)}
+      </ol>
+      <p className="eop-label">{guide.commands}</p>
+      <pre><code>{"npm ci\n# Copy .env.example to .env before starting\nnpm run dev"}</code></pre>
+      <p className="learn-guide-note">{guide.note}</p>
+      <a href={`${repository}/blob/main/DEPLOYMENT.md`} target="_blank" rel="noopener noreferrer">{guide.deploy} ↗</a>
     </details>
   );
 }
