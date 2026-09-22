@@ -5,6 +5,7 @@ import { MOOC_CONTENT, Module, MOOC_CURRICULUM_PROMPT } from "../data/learning-c
 import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import SEO from "../components/SEO";
+import { readQuizAnswers } from "../lib/learning-storage";
 
 const PUBLISHED_MODULES = MOOC_CONTENT.filter((module) => module.lessons.length > 0);
 
@@ -14,11 +15,7 @@ const LearnHub = () => {
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [copied, setCopied] = useState(false);
   const [openTranscripts, setOpenTranscripts] = useState<Record<string, boolean>>({});
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, Record<number, number>>>(() => {
-    const saved = localStorage.getItem("eop-quiz-answers");
-    if (!saved) return {};
-    try { return JSON.parse(saved); } catch { return {}; }
-  });
+  const [quizAnswers, setQuizAnswers] = useState(readQuizAnswers);
 
   const handleQuizSelect = (moduleId: string, qIndex: number, optionIndex: number) => {
     setQuizAnswers(prev => ({

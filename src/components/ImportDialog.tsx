@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -615,7 +616,7 @@ For coordinates: identify location from visual clues. If uncertain, give best es
                   </p>
                   <p className="import-bucket-warning-sub">
                     {bucketStatus === "no-config"
-                      ? <>Add your Supabase URL and key in <a href="/settings" style={{textDecoration:"underline"}}>Settings</a> first.</>  
+                      ? <>Add your Supabase URL and key in <Link to="/settings" style={{textDecoration:"underline"}}>Settings</Link> first.</>
                       : <>The <code style={{fontFamily:"monospace",fontSize:"0.8em"}}>postcards</code> bucket doesn't exist yet in your Supabase project.</>}
                   </p>
                 </div>

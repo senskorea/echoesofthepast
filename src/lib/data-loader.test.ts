@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadAllPostcards } from "./data-loader";
 import mockData from "../data/mock-data.json";
-import { DELETED_POSTCARDS_STORAGE_KEY } from "./postcard-data";
+import { DELETED_POSTCARDS_STORAGE_KEY, POSTCARDS_STORAGE_KEY } from "./postcard-data";
 
 class MemoryStorage implements Storage {
   private values = new Map<string, string>();
@@ -14,11 +14,22 @@ class MemoryStorage implements Storage {
 }
 
 beforeEach(() => {
+  vi.unstubAllEnvs();
   vi.stubGlobal("localStorage", new MemoryStorage());
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => [] }));
 });
 
 describe("catalogue loading", () => {
+  it("preserves image paths across saving and reloading on Pages", async () => {
+    vi.stubEnv("BASE_URL", "/echoesofthepast/");
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => [{
+      ...mockData[0], imageUrl: "/eop-images/example.png",
+    }] } as Response);
+    const cards = await loadAllPostcards();
+    expect(cards[0].imageUrl).toBe("/echoesofthepast/eop-images/example.png");
+    localStorage.setItem(POSTCARDS_STORAGE_KEY, JSON.stringify(cards));
+    expect((await loadAllPostcards())[0].imageUrl).toBe(cards[0].imageUrl);
+  });
   it("keeps a deleted bundled postcard deleted after reload", async () => {
     const deletedId = mockData[0].id;
     localStorage.setItem(DELETED_POSTCARDS_STORAGE_KEY, JSON.stringify([deletedId]));

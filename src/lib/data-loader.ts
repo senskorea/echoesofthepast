@@ -4,6 +4,7 @@ import { parsePostcards, readDeletedPostcardIds, readStoredPostcards } from "./p
 
 function resolvePublicAsset(path: string | undefined): string | undefined {
   if (!path?.startsWith("/")) return path;
+  if (path.startsWith("//") || path.startsWith(import.meta.env.BASE_URL)) return path;
   return `${import.meta.env.BASE_URL}${path.slice(1)}`;
 }
 

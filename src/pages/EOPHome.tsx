@@ -6,6 +6,7 @@ import ImportDialog from "@/components/ImportDialog";
 import SEO from "@/components/SEO";
 import { Postcard } from "@/types/postcard";
 import { loadAllPostcards } from "@/lib/data-loader";
+import { formatCoordinate } from "@/lib/coordinates";
 import { POSTCARDS_STORAGE_KEY, setPostcardDeleted } from "@/lib/postcard-data";
 
 import { useLanguage } from "../lib/i18n";
@@ -213,7 +214,7 @@ const EOPHome = () => {
                     <div className="eop-card-body">
                       <p className="eop-card-label">
                         {card.latitude !== 0
-                          ? `${card.latitude.toFixed(2)}°N, ${card.longitude.toFixed(2)}°E`
+                          ? `${formatCoordinate(card.latitude, "latitude", 2)}, ${formatCoordinate(card.longitude, "longitude", 2)}`
                           : "Location unknown"}
                       </p>
                       <h3 className="eop-card-title">{card.title}</h3>

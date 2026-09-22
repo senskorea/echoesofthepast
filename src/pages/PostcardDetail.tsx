@@ -10,8 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { generateText, generateImage, generateAudio, generateVideo, pollVideoOperation } from "@/lib/ai-service";
 import { loadAllPostcards } from "@/lib/data-loader";
+import { formatCoordinate } from "@/lib/coordinates";
 import SEO from "@/components/SEO";
-import { assetKey, sanitizeAsset } from "@/lib/postcard-data";
+import { assetKey, readAssets, sanitizeAsset } from "@/lib/postcard-data";
 
 // ── Preset definitions ────────────────────────────────────────
 type AssetType = "text" | "image" | "audio" | "video";
@@ -198,12 +199,7 @@ const PostcardDetail = () => {
       setPostcard(found);
 
       // Load saved assets
-      const assets: Record<string, { type: AssetType; content: string }> = {};
-      PRESETS.forEach((p) => {
-        const raw = localStorage.getItem(assetKey(id!, p.id));
-        if (raw) { try { assets[p.id] = JSON.parse(raw); } catch { /* skip */ } }
-      });
-      setSavedAssets(assets);
+      setSavedAssets(id ? readAssets(id) : {});
     };
     load();
   }, [id]);
@@ -300,8 +296,8 @@ const PostcardDetail = () => {
     let val = "";
     if (varName === "title") val = postcard.title;
     else if (varName === "description") val = postcard.description || "";
-    else if (varName === "latitude") val = postcard.latitude.toFixed(4) + "°N";
-    else if (varName === "longitude") val = postcard.longitude.toFixed(4) + "°E";
+    else if (varName === "latitude") val = formatCoordinate(postcard.latitude, "latitude");
+    else if (varName === "longitude") val = formatCoordinate(postcard.longitude, "longitude");
 
     setCustomPrompt((prev) => (prev ? `${prev} ${val}` : val));
     toast({ title: `Injected {${varName}}`, description: `Added "${val}" to your prompt.` });
@@ -594,7 +590,7 @@ const PostcardDetail = () => {
           <div className="pd-info">
             <p className="eop-label" style={{ display: "flex", alignItems: "center", gap: 5 }}>
               <MapPin style={{ width: 11, height: 11 }} />
-              {postcard.latitude.toFixed(4)}°N, {postcard.longitude.toFixed(4)}°E
+              {formatCoordinate(postcard.latitude, "latitude")}, {formatCoordinate(postcard.longitude, "longitude")}
             </p>
             <h1 className="pd-title">{postcard.title}</h1>
             {postcard.description && (
