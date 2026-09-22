@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 
 const repository = "https://github.com/senskorea/echoesofthepast";
 const guides = {
   en: {
+    copy: "Copy instructions for an AI assistant", copied: "Copied — paste into your AI assistant", help: "Need help installing or customising your copy? Paste these instructions into ChatGPT, Claude, Gemini or another AI assistant. The button copies text; it does not send anything or use your daily AI allowance.", preview: "View instructions / copy manually", failed: "Automatic copying didn’t work. Select and copy the instructions below.",
     title: "README & installation guide",
-    intro: "The platform’s source code is available on GitHub. Download it to run your own local copy. To use this public website, no installation is needed.",
+    intro: "You are using the hosted online version of Echoes of the Past. Use it here without installing anything, or download the source code from GitHub to make it your own: customise the design, add your collection, and run it locally or publish your own website.",
     steps: [
       ["Download the code", "Open the GitHub repository, select Code → Download ZIP, then extract the folder. You can also clone the repository using Git."],
       ["Prepare your computer", "Install Node.js 22.12 or newer within the Node 22 release line, which includes npm. Open a terminal in the extracted project folder."],
@@ -15,8 +17,9 @@ const guides = {
     repo: "Get the code on GitHub", readme: "Read the full README", deploy: "Backend & deployment guide", commands: "In your project folder",
   },
   ro: {
+    copy: "Copiază instrucțiunile pentru un asistent AI", copied: "Copiat — lipește în asistentul AI", help: "Ai nevoie de ajutor pentru instalare sau personalizare? Lipește instrucțiunile în ChatGPT, Claude, Gemini sau alt asistent AI. Butonul doar copiază textul; nu trimite nimic și nu consumă limita zilnică AI.", preview: "Vezi instrucțiunile / copiază manual", failed: "Copierea automată nu a reușit. Selectează și copiază instrucțiunile de mai jos.",
     title: "README și ghid de instalare",
-    intro: "Codul sursă al platformei este disponibil pe GitHub. Descarcă-l pentru a rula o copie locală. Acest site public poate fi folosit fără instalare.",
+    intro: "Folosești versiunea online găzduită a platformei Echoes of the Past. O poți utiliza fără instalare sau poți descărca sursa de pe GitHub pentru a o adapta: personalizează designul, adaugă propria colecție și rulează local sau publică propriul site.",
     steps: [
       ["Descarcă codul", "Deschide depozitul GitHub, alege Code → Download ZIP și dezarhivează folderul. Poți clona depozitul și cu Git."],
       ["Pregătește calculatorul", "Instalează Node.js din seria 22, versiunea 22.12 sau mai nouă, care include npm. Deschide un terminal în folderul proiectului dezarhivat."],
@@ -27,8 +30,9 @@ const guides = {
     repo: "Descarcă de pe GitHub", readme: "Citește README", deploy: "Ghid backend și implementare", commands: "În folderul proiectului",
   },
   fr: {
+    copy: "Copier les instructions pour un assistant IA", copied: "Copié — collez dans votre assistant IA", help: "Besoin d’aide pour installer ou personnaliser votre copie ? Collez ces instructions dans ChatGPT, Claude, Gemini ou un autre assistant IA. Le bouton copie le texte sans rien envoyer et sans utiliser votre quota quotidien d’IA.", preview: "Voir les instructions / copier manuellement", failed: "La copie automatique a échoué. Sélectionnez et copiez les instructions ci-dessous.",
     title: "README et guide d’installation",
-    intro: "Le code source de la plateforme est disponible sur GitHub. Téléchargez-le pour exécuter votre propre copie locale. Aucune installation n’est nécessaire pour utiliser ce site public.",
+    intro: "Vous utilisez la version en ligne hébergée d’Echoes of the Past. Utilisez-la sans installation, ou téléchargez le code source sur GitHub pour vous l’approprier : personnalisez le design, ajoutez votre collection et lancez votre copie localement ou publiez votre propre site.",
     steps: [
       ["Télécharger le code", "Ouvrez le dépôt GitHub, choisissez Code → Download ZIP, puis décompressez le dossier. Vous pouvez aussi cloner le dépôt avec Git."],
       ["Préparer votre ordinateur", "Installez Node.js de la série 22, version 22.12 ou ultérieure, qui inclut npm. Ouvrez un terminal dans le dossier du projet décompressé."],
@@ -43,6 +47,27 @@ const guides = {
 export default function QuickStartGuide() {
   const { lang } = useLanguage();
   const guide = guides[lang];
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const instructions = `Help me install, customise or troubleshoot my own copy of Echoes of the Past (GeoStories). Reply in ${lang === "ro" ? "Romanian" : lang === "fr" ? "French" : "English"} using beginner-friendly steps.
+
+Public hosted version: https://senskorea.github.io/echoesofthepast/
+Source code: ${repository}
+README: ${repository}/blob/main/README.md
+Deployment guide: ${repository}/blob/main/DEPLOYMENT.md
+
+First ask which operating system I use, whether I have downloaded the code, and whether I want local installation, customisation, deployment or help with an error. Give one manageable step at a time and check the result. Read the current README and deployment guide; if you cannot access them, ask me to paste the relevant section.
+
+For local installation: download Code → Download ZIP on GitHub and extract it, or clone the repository. Use Node.js 22.12 or newer within the Node 22 release line and npm. Open a terminal in the project folder and run npm ci. Copy .env.example to .env without overwriting existing configuration. Run npm run dev and open the address printed by Vite (usually http://localhost:8080). The gallery, lessons and quizzes work without cloud credentials; external videos require internet.
+
+Explain that the public site is an online hosted version. My downloaded copy can have its own design and collection, run locally, or be published independently. Keep the repository’s MIT licence and copyright notice; check content and image permissions separately.
+
+For AI in my own deployment, follow DEPLOYMENT.md to configure my organisation’s Supabase backend and provider credentials. Downloading the code does not provide the public site’s private keys or AI quota. GitHub Pages hosts static frontend files, not the backend. All VITE_ variables are public. Never ask me to paste Gemini/OpenAI secret keys or Supabase service-role keys into chat, frontend code or GitHub. Explain where I must enter secrets privately. Enable only configured and verified services and set usage limits.
+
+For troubleshooting, ask for the exact step and a redacted error message. Preserve existing files, browser-local creations and backups. Do not advise clearing browser data or overwriting .env as a first step. Help verify the result before moving on.`;
+  const copyInstructions = async () => {
+    try { await navigator.clipboard.writeText(instructions); setCopyStatus("copied"); }
+    catch { setCopyStatus("failed"); }
+  };
   return (
     <section id="installation-guide" aria-labelledby="installation-guide-title" className="learn-guide">
       <h2 id="installation-guide-title">{guide.title}</h2>
@@ -50,6 +75,15 @@ export default function QuickStartGuide() {
       <div className="learn-guide-links">
         <a href={repository} target="_blank" rel="noopener noreferrer">{guide.repo} ↗</a>
         <a className="learn-readme-button" href={`${repository}/blob/main/README.md`} target="_blank" rel="noopener noreferrer">{guide.readme} ↗</a>
+      </div>
+      <div className="learn-ai-help">
+        <p>{guide.help}</p>
+        <button type="button" className="learn-copy-button" onClick={copyInstructions}>{guide.copy}</button>
+        <p role="status" aria-live="polite">{copyStatus === "copied" ? guide.copied : copyStatus === "failed" ? guide.failed : ""}</p>
+        <details open={copyStatus === "failed" || undefined}>
+          <summary>{guide.preview}</summary>
+          <textarea aria-label={guide.preview} readOnly value={instructions} rows={10} onFocus={event => event.currentTarget.select()} />
+        </details>
       </div>
       <ol>
         {guide.steps.map(([title, text]) => <li key={title}><strong>{title}</strong><p>{text}</p></li>)}

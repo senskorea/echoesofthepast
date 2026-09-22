@@ -2398,3 +2398,7 @@ body {
   .eop-root > main section { padding: 16px; }
   .eop-root > main button { max-width: 100%; white-space: normal; }
 }
+.learn-ai-help { margin: 24px 0; padding: 20px; border: 1px solid var(--grey-5); border-radius: 12px; background: var(--grey-6); }
+.learn-copy-button { border: 1px solid var(--black); background: var(--black); color: white; border-radius: 8px; padding: 12px 16px; font-weight: 600; text-align: left; max-width: 100%; }
+.learn-ai-help summary { font-size: .9rem; }
+.learn-ai-help textarea { width: 100%; margin-top: 12px; padding: 12px; border: 1px solid var(--grey-4); border-radius: 8px; font-size: .85rem; background: white; }
