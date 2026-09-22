@@ -6,6 +6,7 @@ import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import SEO from "../components/SEO";
 import { readQuizAnswers } from "../lib/learning-storage";
+import QuickStartGuide from "../components/QuickStartGuide";
 
 const PUBLISHED_MODULES = MOOC_CONTENT.filter((module) => module.lessons.length > 0);
 
@@ -140,6 +141,8 @@ const LearnHub = () => {
             </div>
           </div>
         </div>
+
+        {!selectedModule && <QuickStartGuide />}
 
         {selectedModule ? (
           /* ── MODULE DETAIL VIEW ── */
