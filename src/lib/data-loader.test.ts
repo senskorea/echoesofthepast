@@ -50,6 +50,21 @@ describe("catalogue loading", () => {
     expect(cards.map(card => card.id)).toEqual([mockData[1].id, local.id]);
   });
 
+  it("hides retired samples from saved snapshots and cached public data", async () => {
+    const retired = [
+      "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      "c3d4e5f6-a7b8-9012-3456-7890abcdef12",
+      "d4e5f6a7-b8c9-0123-4567-890abcdef123",
+    ].map(id => ({ ...mockData[0], id }));
+    const personal = { ...mockData[0], id: "personal-story" };
+    const snapshot = JSON.stringify([...retired, personal]);
+    localStorage.setItem(POSTCARDS_STORAGE_KEY, snapshot);
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => [...mockData, ...retired] } as Response);
+    const cards = await loadAllPostcards();
+    expect(cards.map(card => card.id)).toEqual([...mockData.map(card => card.id), personal.id]);
+    expect(localStorage.getItem(POSTCARDS_STORAGE_KEY)).toBe(snapshot);
+  });
+
   it("loads public data from the configured base path", async () => {
     await loadAllPostcards();
     expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/eop-postcards\.json$/));
