@@ -27,7 +27,7 @@ const guides = {
       ["Cere ajutor", "Deschide fereastra de chat pentru a întreba tutorele, când serviciul AI este disponibil. Dacă o acțiune eșuează, păstrează textul și încearcă mai târziu; arhiva și lecțiile rămân disponibile."],
     ],
     storage: "Modificările, creațiile salvate și progresul rămân în acest browser. Nu apar automat pe alt dispozitiv și nu sunt publicate în arhiva tuturor. Exportă cărțile poștale înainte de a șterge datele browserului; progresul lecțiilor nu este inclus în acea copie.",
-    availability: "Crearea cu AI, încărcările și harta depind de servicii online. Unele instrumente pot fi temporar indisponibile în timpul configurării serviciilor. Nu trebuie să introduci chei API. Poți începe cu galeria și modulele de învățare.",
+    availability: "Crearea cu AI, încărcările și harta depind de servicii online. Poți trimite până la cinci cereri AI pe zi în acest browser; analiza, răspunsurile tutorelui și îmbunătățirea instrucțiunilor sunt incluse. Unele instrumente media pot fi temporar indisponibile. Nu trebuie să introduci chei API. Poți începe cu galeria și modulele de învățare.",
     archive: "Explorează arhiva", backup: "Deschide setările pentru backup",
   },
   fr: {
@@ -41,7 +41,7 @@ const guides = {
       ["Demandez de l'aide", "Ouvrez la bulle de discussion pour poser une question au tuteur lorsque le service d'IA est disponible. Si une action échoue, gardez votre texte et réessayez plus tard ; les archives et les leçons restent disponibles."],
     ],
     storage: "Vos modifications, créations enregistrées et progrès restent dans ce navigateur. Ils n'apparaissent pas automatiquement sur un autre appareil et ne sont pas publiés dans les archives de tous. Exportez vos cartes postales avant d'effacer les données du navigateur ; les progrès des leçons ne sont pas inclus dans cette sauvegarde.",
-    availability: "La création par IA, les envois de fichiers et la carte dépendent de services en ligne. Certains outils peuvent être temporairement indisponibles pendant la configuration des services. Vous ne devez pas saisir de clés API. Vous pouvez commencer par la galerie et les modules.",
+    availability: "La création par IA, les envois de fichiers et la carte dépendent de services en ligne. Vous disposez de cinq demandes d’IA par jour dans ce navigateur ; l’analyse, les réponses du tuteur et l’amélioration des instructions sont incluses. Certains outils multimédias peuvent être temporairement indisponibles. Vous ne devez pas saisir de clés API. Vous pouvez commencer par la galerie et les modules.",
     archive: "Explorer les archives", backup: "Ouvrir les paramètres de sauvegarde",
   },
 };

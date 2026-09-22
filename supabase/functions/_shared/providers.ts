@@ -4,7 +4,13 @@ type Env = (name: string) => string | undefined;
 export type ProviderResult = { text: string } | { bytes: Uint8Array; mime: string } | { operation: string };
 async function providerFetch(url: string, init: RequestInit, fetcher: typeof fetch): Promise<Response> {
   const response = await fetcher(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(100_000) });
-  if (!response.ok) throw new GatewayError(response.status===429 ? 'limit' : response.status===400 ? 'refused' : 'unavailable', response.status===429 ? 429 : 503);
+  if (!response.ok) {
+    const failure = await response.json().catch(()=>({}));
+    // Record only bounded diagnostics, never raw provider messages or credentials.
+    const details = JSON.stringify(failure.error?.details || []);
+    console.error(JSON.stringify({providerStatus:response.status,quotaZero:/"quotaValue"\s*:\s*"?0"?/.test(details),billingRequired:/billing|paid tier/i.test(failure.error?.message || '')}));
+    throw new GatewayError(response.status===429 ? 'limit' : response.status===400 ? 'refused' : 'unavailable', response.status===429 ? 429 : 503);
+  }
   return response;
 }
 function decode(data: string) { return Uint8Array.from(atob(data), c => c.charCodeAt(0)); }
@@ -54,7 +60,7 @@ export async function generate(input: Input, env: Env, fetcher: typeof fetch = f
   const headers = { 'Content-Type':'application/json', ...(google ? {'x-goog-api-key':key} : {Authorization:`Bearer ${key}`}) };
   if (input.action==='video') {
     const instance = {prompt:input.prompt, ...(input.base64Image ? {image:{bytesBase64Encoded:input.base64Image,mimeType:input.mimeType}} : {})};
-    const response = await providerFetch(`https://generativelanguage.googleapis.com/v1beta/models/${input.modelId}:predictLongRunning`, {method:'POST',headers,body:JSON.stringify({instances:[instance],parameters:{sampleCount:1,aspectRatio:'16:9',durationSeconds:4}})},fetcher);
+    const response = await providerFetch(`https://generativelanguage.googleapis.com/v1beta/models/${input.modelId}:predictLongRunning`, {method:'POST',headers,body:JSON.stringify({instances:[instance],parameters:{sampleCount:1,aspectRatio:'16:9',durationSeconds:4,resolution:'720p'}})},fetcher);
     const data = await response.json();
     if (typeof data.name !== 'string' || !/^models\/[a-zA-Z0-9.-]+\/operations\/[a-zA-Z0-9_-]+$/.test(data.name)) throw new GatewayError('unavailable');
     return {operation:data.name};
@@ -66,7 +72,11 @@ export async function generate(input: Input, env: Env, fetcher: typeof fetch = f
   if (google) {
     const parts: unknown[] = [{text:input.prompt}];
     if (input.base64Image) parts.push({inlineData:{mimeType:input.mimeType,data:input.base64Image}});
-    const response = await providerFetch(`https://generativelanguage.googleapis.com/v1beta/models/${input.modelId}:generateContent`,{method:'POST',headers,body:JSON.stringify({contents:[{parts}],generationConfig:input.action==='image' ? {responseModalities:['IMAGE']} : {maxOutputTokens:2000,temperature:0.8}})},fetcher);
+    // Count multimodal input before generation so the reservation has a bounded cost.
+    const countResponse = await providerFetch(`https://generativelanguage.googleapis.com/v1beta/models/${input.modelId}:countTokens`, {method:'POST',headers,body:JSON.stringify({contents:[{parts}]})},fetcher);
+    const tokenCount = (await countResponse.json()).totalTokens;
+    if (!Number.isInteger(tokenCount) || tokenCount < 0 || tokenCount > 32768) throw new GatewayError('invalid',400);
+    const response = await providerFetch(`https://generativelanguage.googleapis.com/v1beta/models/${input.modelId}:generateContent`,{method:'POST',headers,body:JSON.stringify({contents:[{parts}],generationConfig:input.action==='image' ? {responseModalities:['IMAGE'],candidateCount:1,maxOutputTokens:8192,imageConfig:{imageSize:'1K'}} : {maxOutputTokens:2000,temperature:0.8}})},fetcher);
     const data = await response.json();
     const output = data.candidates?.[0]?.content?.parts as Array<{text?:string;inlineData?:{data:string;mimeType:string}}> | undefined;
     if (input.action==='text') {

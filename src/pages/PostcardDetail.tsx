@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, MapPin, Loader2, Download, Save, Volume2, ImageIcon, FileText, Pencil, BookOpen, Mail, Clapperboard, Check, FileJson, Sparkles, ScanText, HeartPulse, Lightbulb, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, Play, Pause, Wand2, Layers } from "lucide-react";
 import { Postcard } from "@/types/postcard";
 import { friendlyError, ServiceError } from "@/lib/service-errors";
-import { getAIConfig } from "@/lib/supabase-config";
+import { getAIConfig, isCreationEnabled } from "@/lib/supabase-config";
 import { TEXT_MODELS, IMAGE_MODELS, VIDEO_MODELS, AIModel } from "@/lib/ai-models";
 import { useLanguage } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -163,6 +163,10 @@ const PostcardDetail = () => {
 
   const activePreset = PRESETS.find(p => p.id === selectedPreset) || PRESETS[0];
   const activeType = activePreset.id === "custom" ? customType : activePreset.type;
+  const availableModels = (activeType === 'image' ? IMAGE_MODELS : activeType === 'video' ? VIDEO_MODELS : TEXT_MODELS)
+    .filter(model => model.provider === 'gemini' || import.meta.env.VITE_OPENAI_ENABLED === 'true');
+  const creationAvailable = isCreationEnabled(activeType);
+  useEffect(() => { setSelectedModel(''); }, [selectedPreset, customType]);
   const { provider } = getAIConfig();
 
   const hasSaved = !!savedAssets[selectedPreset];
@@ -917,7 +921,7 @@ const PostcardDetail = () => {
                             style={{ background: "white", width: "100%", marginBottom: 4 }}
                           >
                             <option value="">Recommended for {activePreset.badge}</option>
-                            {(activePreset.id === "custom" ? [...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS] : (activePreset.type === "image" ? IMAGE_MODELS : (activePreset.type === "video" ? VIDEO_MODELS : TEXT_MODELS))).map(m => (
+                            {availableModels.map(m => (
                               <option key={m.id} value={m.id}>{m.name}</option>
                             ))}
                           </select>
@@ -1073,10 +1077,12 @@ const PostcardDetail = () => {
                           />
                         </div>
 
+                        {!creationAvailable && <p role="status" style={{fontSize:'0.85rem',marginBottom:12}}>{friendlyError(new ServiceError('unavailable'),lang)}</p>}
+                        <p style={{fontSize:'0.75rem',marginBottom:12}}>{lang === 'ro' ? 'Până la 5 cereri AI pe zi în acest browser. Analiza și îmbunătățirea instrucțiunilor sunt incluse.' : lang === 'fr' ? "Jusqu’à 5 demandes d’IA par jour dans ce navigateur. L’analyse et l’amélioration des instructions sont incluses." : 'Up to 5 AI requests per day in this browser. Analysis and prompt polishing count too.'}</p>
                         <button
                           className="eop-btn-primary pd-generate-btn"
                           onClick={handleGenerate}
-                          disabled={isGenerating}
+                          disabled={isGenerating || (!creationAvailable && !(activeType === "video" && pendingVideoJob))}
                           style={{ width: "100%" }}
                         >
                           {isGenerating ? (

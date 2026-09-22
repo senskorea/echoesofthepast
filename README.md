@@ -8,7 +8,7 @@ Explore historical postcards, learn about AI and cultural heritage, and create s
 
 ## Status
 
-The central backend is deployed to Echoes and access checks pass. **Paid generation and the frontend cutover are still pending.** GitHub Pages hosts the website; organisation-managed Supabase handles visitor sessions, AI requests and media storage. Visitors do not supply API keys. Generation and uploads start disabled until the operator configures the backend and usage limits. See [deployment instructions](DEPLOYMENT.md) and [readiness evidence](PUBLIC-LAUNCH-READINESS.md).
+The central backend is deployed to Echoes and access checks pass. **Central text, tutor and uploads are enabled in this release. Image/video are unavailable pending Google quota resolution; narration needs the OpenAI key.** GitHub Pages hosts the website; organisation-managed Supabase handles visitor sessions, AI requests and media storage. Visitors do not supply API keys. The service permits five AI requests per browser visitor per UTC day, with a shared EUR 50 daily reservation allowance. See [deployment instructions](DEPLOYMENT.md) and [readiness evidence](PUBLIC-LAUNCH-READINESS.md).
 
 ## Run locally
 
@@ -34,6 +34,7 @@ Set these in the ignored root `.env`, then restart Vite:
 | `VITE_SUPABASE_URL` | Organisation's Supabase endpoint. |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Public project key. |
 | `VITE_CENTRAL_SERVICES_ENABLED` | `false` until hosted service checks pass. |
+| `VITE_IMAGE_ENABLED`, `VITE_VIDEO_ENABLED`, `VITE_NARRATION_ENABLED`, `VITE_OPENAI_ENABLED` | Enable only verified, funded media/providers; default false. |
 | `VITE_AI_PROVIDER` | `gemini` by default, or `openai`. |
 | `VITE_GOOGLE_MAPS_API_KEY` | Maps browser key restricted to approved domains and the Maps JavaScript API. |
 

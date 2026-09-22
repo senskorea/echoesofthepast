@@ -15,7 +15,7 @@ describe('gateway validation',()=>{
 });
 describe('provider adapters',()=>{
   it('uses the server secret in headers and returns only result text',async()=>{
-    const mock=vi.fn(async()=>Response.json({candidates:[{content:{parts:[{text:'answer'}]}}]}));
+    const mock=vi.fn(async()=>Response.json({totalTokens:10,candidates:[{content:{parts:[{text:'answer'}]}}]}));
     const result=await generate({action:'text',requestId,prompt:'q',modelId:'gemini-3.6-flash'},()=> 'server-secret',mock);
     expect(result).toEqual({text:'answer'});
     const [url,options]=mock.mock.calls[0] as unknown as [string,RequestInit];
@@ -50,4 +50,11 @@ describe('video download redirects',()=>{
     await expect(poll('models/veo-3.1-generate-preview/operations/abc',()=> 'server-secret',mock)).rejects.toThrow();
     expect(mock).toHaveBeenCalledTimes(2);
   });
+});
+
+it('rejects oversized model input before paid generation',async()=>{
+ const mock=vi.fn(async()=>Response.json({totalTokens:32769}));
+ await expect(generate({action:'text',requestId,prompt:'history',modelId:'gemini-3.6-flash'},()=> 'key',mock)).rejects.toMatchObject({code:'invalid'});
+ expect(mock).toHaveBeenCalledTimes(1);
+ expect((mock.mock.calls[0] as unknown as [string])[0]).toContain(':countTokens');
 });

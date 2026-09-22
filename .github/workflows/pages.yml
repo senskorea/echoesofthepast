@@ -50,6 +50,10 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_CENTRAL_SERVICES_ENABLED: ${{ vars.VITE_CENTRAL_SERVICES_ENABLED || 'false' }}
+          VITE_IMAGE_ENABLED: ${{ vars.VITE_IMAGE_ENABLED || 'false' }}
+          VITE_VIDEO_ENABLED: ${{ vars.VITE_VIDEO_ENABLED || 'false' }}
+          VITE_NARRATION_ENABLED: ${{ vars.VITE_NARRATION_ENABLED || 'false' }}
+          VITE_OPENAI_ENABLED: ${{ vars.VITE_OPENAI_ENABLED || 'false' }}
           VITE_AI_PROVIDER: ${{ vars.VITE_AI_PROVIDER || 'gemini' }}
           VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
