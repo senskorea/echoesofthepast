@@ -13,7 +13,7 @@ const guides = {
       ["Ask for help", "Open the chat bubble to ask the Smart Tutor a question when the AI service is available. If an action fails, keep your text and try again later; the archive and lessons are still available."],
     ],
     storage: "Your edits, saved creations and learning progress stay in this browser. They do not automatically appear on another device or publish to everyone's archive. Export your postcards before clearing browser data; learning progress is not included in that backup.",
-    availability: "AI creation, uploads and the map depend on online services. Online tools may be temporarily unavailable while services are being configured. You do not need to enter API keys. You can start with the gallery and learning modules.",
+    availability: "AI creation, uploads and the map depend on online services. You can make up to five AI requests per day in this browser; analysis, tutor replies and prompt polishing count too. Some media tools may be temporarily unavailable. You do not need to enter API keys. You can start with the gallery and learning modules.",
     archive: "Explore the archive", backup: "Open backup settings",
   },
   ro: {
