@@ -116,6 +116,7 @@ const LearnHub = () => {
             <p className="pd-description" style={{ maxWidth: 600 }}>
               Master the tools of digital preservation and historical analysis through four published modules.
             </p>
+            {!selectedModule && <a className="learn-guide-shortcut" href="#installation-guide">README & installation guide ↓</a>}
             <button 
               onClick={handleCopyCurriculum}
               style={{ 
@@ -153,7 +154,7 @@ const LearnHub = () => {
           /* ── MODULE DETAIL VIEW ── */
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <button 
-              onClick={() => setSelectedModule(null)}
+              onClick={() => { setSelectedModule(null); window.scrollTo({ top: 0, behavior: "instant" }); }}
               style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--grey-2)", fontSize: "0.9rem", marginBottom: 24, background: "none", border: "none", cursor: "pointer" }}
             >
               <ArrowLeft style={{ width: 16, height: 16 }} /> Back to Curriculum
@@ -327,7 +328,7 @@ const LearnHub = () => {
                     flexDirection: "column",
                     height: "100%"
                   }}
-                  onClick={() => setSelectedModule(module)}
+                  onClick={() => { setSelectedModule(module); window.scrollTo({ top: 0, behavior: "instant" }); }}
                 >
                   {isCompleted && (
                     <div style={{ position: "absolute", top: 16, right: 16, color: "#10b981" }}>

@@ -65,6 +65,15 @@ describe("catalogue loading", () => {
     expect(localStorage.getItem(POSTCARDS_STORAGE_KEY)).toBe(snapshot);
   });
 
+  it("keeps the imported full story when an older browser copy lacks it", async () => {
+    const { sourceContent: _content, ...oldCopy } = mockData[0];
+    localStorage.setItem(POSTCARDS_STORAGE_KEY, JSON.stringify([{ ...oldCopy, title: "My edited title" }]));
+    const cards = await loadAllPostcards();
+    expect(cards[0].title).toBe("My edited title");
+    expect(cards[0].sourceContent).toEqual(mockData[0].sourceContent);
+    expect(cards.every(card => card.sourceContent?.length)).toBe(true);
+  });
+
   it("loads public data from the configured base path", async () => {
     await loadAllPostcards();
     expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/eop-postcards\.json$/));

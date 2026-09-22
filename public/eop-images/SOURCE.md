@@ -4,7 +4,8 @@ Imported on 22 September 2026 at the project owner's request from
 https://small.academy/eop/.
 
 The catalogue in `public/eop-postcards.json` contains 32 historical postcards,
-with the source titles, descriptions and coordinates, plus a `detailUrl` for
+with the source titles, descriptions, coordinates and full article text (as
+structured headings and paragraphs in `sourceContent`), plus a `detailUrl` for
 each original record. The 44 `*-source-*` images are unmodified copies of images
 from those records. Historical claims and locations reflect the source catalogue
 and have not been independently authenticated.

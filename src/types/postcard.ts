@@ -8,6 +8,7 @@ export interface Postcard {
   latitude: number;
   longitude: number;
   detailUrl?: string;
+  sourceContent?: { kind: "heading" | "paragraph"; text: string }[];
   aiVisionResults?: {
     transcribed_text?: string;
     visual_description?: string;

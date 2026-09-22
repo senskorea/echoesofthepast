@@ -107,10 +107,10 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
       {isOpen && (
         <div style={{ 
           position: "fixed", 
-          bottom: 32, 
-          right: 32, 
-          width: 400, 
-          height: 600, 
+          bottom: 16,
+          right: 16,
+          width: "min(400px, calc(100vw - 32px))",
+          height: "min(600px, calc(100dvh - 32px))",
           background: "white", 
           borderRadius: 24, 
           boxShadow: "0 12px 40px rgba(0,0,0,0.15)", 

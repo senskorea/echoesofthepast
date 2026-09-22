@@ -625,9 +625,18 @@ const PostcardDetail = () => {
             {postcard.description && (
               <p className="pd-description">{postcard.description}</p>
             )}
+            {postcard.sourceContent?.length ? (
+              <section className="postcard-record" aria-labelledby="postcard-record-title">
+                <h2 id="postcard-record-title">The postcard’s story & details</h2>
+                <p className="postcard-record-credit">From the Small Academy collection. Historical descriptions are reproduced from the source record.</p>
+                {postcard.sourceContent.map((block, index) => block.kind === "heading"
+                  ? <h3 key={index}>{block.text}</h3>
+                  : <p key={index}>{block.text}</p>)}
+              </section>
+            ) : null}
             {postcard.detailUrl && /^https?:\/\//.test(postcard.detailUrl) && (
               <a href={postcard.detailUrl} target="_blank" rel="noopener noreferrer" className="pd-action-btn">
-                View original postcard record ↗
+                Source: Small Academy ↗
               </a>
             )}
             <button 

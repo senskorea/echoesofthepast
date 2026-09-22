@@ -30,6 +30,7 @@ export const postcardSchema = z.object({
   latitude: z.coerce.number().finite().min(-90).max(90),
   longitude: z.coerce.number().finite().min(-180).max(180),
   detailUrl: assetUrlSchema.optional(),
+  sourceContent: z.array(z.object({ kind: z.enum(["heading", "paragraph"]), text: z.string() })).optional(),
   aiVisionResults: visionSchema.optional(),
 });
 

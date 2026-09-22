@@ -45,7 +45,7 @@ export async function loadAllPostcards(): Promise<Postcard[]> {
   const final = [...systemPostcards];
   userPostcards.forEach(up => {
     const idx = final.findIndex(f => f.id === up.id);
-    if (idx > -1) final[idx] = up;
+    if (idx > -1) final[idx] = { ...up, sourceContent: up.sourceContent ?? final[idx].sourceContent };
     else final.push(up);
   });
 
