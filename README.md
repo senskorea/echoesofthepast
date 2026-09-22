@@ -8,7 +8,7 @@ Explore historical postcards, learn about AI and cultural heritage, and create s
 
 ## Status
 
-Central services are implemented in this working version but **not deployed or live-tested yet**. GitHub Pages hosts the website; organisation-managed Supabase handles visitor sessions, AI requests and media storage. Visitors do not supply API keys. Generation and uploads start disabled until the operator configures the backend and usage limits. See [deployment instructions](DEPLOYMENT.md) and [readiness evidence](PUBLIC-LAUNCH-READINESS.md).
+The central backend is deployed to Echoes and access checks pass. **Paid generation and the frontend cutover are still pending.** GitHub Pages hosts the website; organisation-managed Supabase handles visitor sessions, AI requests and media storage. Visitors do not supply API keys. Generation and uploads start disabled until the operator configures the backend and usage limits. See [deployment instructions](DEPLOYMENT.md) and [readiness evidence](PUBLIC-LAUNCH-READINESS.md).
 
 ## Run locally
 

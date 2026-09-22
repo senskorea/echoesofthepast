@@ -1,5 +1,6 @@
-project_id = "geostories"
+project_id = "echoes"
 [functions.ai-gateway]
+import_map = "./functions/deno.json"
 verify_jwt = false
 # The handler verifies the session token with auth.getUser before any database,
 # storage or provider operation. Supports new signing keys, not public-key auth.

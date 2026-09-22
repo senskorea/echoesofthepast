@@ -15,14 +15,14 @@
 
 ## Evidence and limits
 
-50 tests pass, strict lint passes, frontend and Deno type checks pass, and the production build succeeds. SQL runs in PGlite with mock Supabase auth/storage schemas and roles. Handler/provider tests use mocks. Local browser checks verified Settings and the friendly disabled tutor response. This does **not** establish hosted Supabase RLS/storage integration, provider model access or successful live media generation.
+52 tests pass, strict lint passes, frontend and Deno type checks pass, and the production build succeeds. SQL runs in PGlite with mock Supabase auth/storage schemas and roles. Handler/provider tests use mocks. Local browser checks verified Settings and the friendly disabled tutor response. This does **not** establish hosted Supabase RLS/storage integration, provider model access or successful live media generation.
 
-The organisation in Brave is `teacherbgv's Org`. The project creation form is prepared as GeoStories in Frankfurt, automatic RLS enabled and automatic new-table exposure disabled. Password entry and submission remain with the user. The old local endpoint is unreachable; its values are preserved with services explicitly disabled.
+The organisation in Brave is `teacherbgv's Org`. Echoes is now provisioned and Healthy in Frankfurt, reference `bnkzbmwhirmcixeaaipa`. The local URL has been updated; its public key is configured and services remain disabled. CLI profile `echoes` is connected. Both migrations and all five functions are deployed; anonymous sessions are enabled. See DEPLOYMENT.md for live check evidence and the approved five-request / EUR 50 budget configuration.
 
 ## Remaining launch gates
 
-1. User completes project creation; configure anonymous Auth and operator access.
-2. Apply migration to the fresh project, verify actual grants/RLS/storage, run Supabase security advisors and deploy gateway plus legacy tombstones.
+1. Completed: project creation, anonymous Auth and operator access.
+2. Completed: schema, grants/RLS checks, gateway and legacy tombstones. Advisor helper-function warnings fixed; email/password leaked-password protection warning remains (unused by this app).
 3. Set private provider secrets and approved per-action limits. Verify funded-account access to the exact model IDs. Configure the restricted Maps key.
 4. Run bounded hosted smoke tests: unauthenticated/cross-session denial, duplicate requests, exhausted limits, file rejection, uploads, analysis, tutor, text, images, audio, video, playback, export and reload.
 5. Set a storage/ledger retention policy and monitor usage. Media deletion breaks archive links; no automatic cleanup has been enabled. Set provider budgets as an additional safeguard; request allowances are not exact currency caps.

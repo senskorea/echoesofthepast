@@ -4,7 +4,7 @@ This runbook is for the operator, not visitors. Keep both service flags disabled
 
 ## 1. Create and connect the project
 
-Complete the prepared GeoStories project form in the selected Supabase organisation. Save its database password securely; never put it in Git or chat. Record the project reference. Enable anonymous sign-ins in Auth. Anonymous visitors need no email/password, but resetting browser data can create a new identity: global limits are essential. Review Auth rate limits. CAPTCHA is not integrated in this frontend; if required, integrate its token flow before enabling it in Auth.
+Complete the prepared Echoes project form in the selected Supabase organisation. Save its database password securely; never put it in Git or chat. Record the project reference. Enable anonymous sign-ins in Auth. Anonymous visitors need no email/password, but resetting browser data can create a new identity: global limits are essential. Review Auth rate limits. CAPTCHA is not integrated in this frontend; if required, integrate its token flow before enabling it in Auth.
 
 Use the official CLI from the repository directory. Replace PROJECT_REF with the actual reference and complete authentication/password prompts privately:
 
@@ -22,7 +22,7 @@ Review the dry run before applying. Verify RLS and revoked grants on `generation
 In Edge Function secrets set `GEMINI_API_KEY` and `OPENAI_API_KEY` as needed, `GENERATION_ENABLED=false`, and `ALLOWED_ORIGINS=https://senskorea.github.io`. Origins contain no route path. Add localhost only during testing. Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; never copy those private values into frontend configuration. See `supabase/functions/.env.example` for local function development.
 
 ```sh
-supabase functions deploy ai-gateway generate-story generate-video analyse-postcard-image format-postcard-json --project-ref PROJECT_REF --use-api
+supabase functions deploy ai-gateway generate-story generate-video analyse-postcard-image format-postcard-json --project-ref PROJECT_REF --use-api --import-map supabase/functions/deno.json
 ```
 
 The gateway config disables legacy JWT verification at the platform layer because the function verifies every caller with `auth.getUser`. Do not remove that handler check. All four legacy endpoints are tombstones and must also be deployed to prevent old clients using the previous implementations.
@@ -42,3 +42,13 @@ Set repository Actions secrets `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_K
 Set repository variables `VITE_AI_PROVIDER=gemini` (or `openai`) and `VITE_CENTRAL_SERVICES_ENABLED=true` only after hosted checks pass. Narration needs OpenAI and video needs Gemini regardless of this default. Merge the reviewed migration into main; the Pages workflow checks and deploys it. Verify direct routes, clean-browser anonymous use, English/Romanian/French errors and existing archives on the deployed URL.
 
 For an incident, set the backend `GENERATION_ENABLED=false` to block new generation/uploads immediately. Existing video polling remains available to recover already-started work. Disable action rows as needed. Rebuild with the frontend flag false. Preserve reservations and existing media. Roll back frontend changes only while paid endpoints remain disabled; never restore the old permissive handlers. For complete function shutdown, disable access to the gateway at the platform layer as well.
+
+## Echoes deployment record — 22 September 2026
+
+Project `bnkzbmwhirmcixeaaipa` in Frankfurt is linked with CLI profile `echoes`. Gateway and four legacy tombstones are deployed. Both migrations are applied and recorded in `supabase_migrations.schema_migrations`. The installed CLI's legacy migration subcommands failed with a profile-format error; deployment used `db query --linked --profile echoes --file ...` and explicitly recorded the applied SQL using the CLI history schema. Do not reapply those migrations.
+
+Anonymous Auth is enabled with user approval. Live smoke checks created a visitor session, denied visitor ledger access, rejected absent/public-key bearer sessions, and returned a friendly unavailable response with generation disabled. The dashboard-created RLS trigger's client execution grants were revoked after an advisor warning. The remaining advisor warning concerns leaked-password protection for email/password Auth; this platform uses anonymous sessions.
+
+The operator approved **five AI requests per visitor per UTC day across creation types** and **EUR 50 per UTC day across all visitors**. `generation_budget` stores these values. Each AI call (including tutor, analysis and prompt preparation) reserves one request; one multi-step creation can therefore consume multiple requests. Uploads have a separate quota. The service reserves a conservative per-action upper cost before calling the provider; all `max_cost_eur` values remain zero and actions remain disabled until actual model prices, output bounds, exchange-rate allowance and fees are reviewed. This reservation ceiling is not a guarantee about hosting charges or provider billing; configure provider caps as well. Anonymous visitors can reset their identity; the shared budget cannot be reset that way.
+
+Public URL/key are saved in the ignored local `.env`. GitHub configuration and live Pages are unchanged. Provider secrets, per-action cost bounds, paid smoke tests and final frontend cutover remain pending.
