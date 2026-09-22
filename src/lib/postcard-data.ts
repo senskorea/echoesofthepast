@@ -50,9 +50,9 @@ export function parsePostcards(value: unknown): Postcard[] {
 }
 
 export function readStoredPostcards(): Postcard[] {
-  const raw = localStorage.getItem(POSTCARDS_STORAGE_KEY);
-  if (!raw) return [];
   try {
+    const raw = localStorage.getItem(POSTCARDS_STORAGE_KEY);
+    if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) throw new Error("Stored postcard data is not an array.");
     return parsePostcards(parsed);
@@ -63,9 +63,9 @@ export function readStoredPostcards(): Postcard[] {
 }
 
 export function readDeletedPostcardIds(): Set<string> {
-  const raw = localStorage.getItem(DELETED_POSTCARDS_STORAGE_KEY);
-  if (!raw) return new Set();
   try {
+    const raw = localStorage.getItem(DELETED_POSTCARDS_STORAGE_KEY);
+    if (!raw) return new Set();
     const parsed: unknown = JSON.parse(raw);
     return new Set(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : []);
   } catch {

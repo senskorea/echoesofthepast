@@ -1,3 +1,4 @@
+import PageErrorBoundary from "./components/PageErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,7 +16,7 @@ import { LanguageProvider } from "./lib/i18n";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <HelmetProvider>
+  <PageErrorBoundary><HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <TooltipProvider>
@@ -35,7 +36,7 @@ const App = () => (
         </TooltipProvider>
       </LanguageProvider>
     </QueryClientProvider>
-  </HelmetProvider>
+  </HelmetProvider></PageErrorBoundary>
 );
 
 export default App;

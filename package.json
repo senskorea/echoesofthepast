@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "typecheck:server": "deno check --config supabase/functions/deno.json supabase/functions/ai-gateway/index.ts"
   },
   "dependencies": {
     "@googlemaps/markerclusterer": "^2.6.2",
@@ -71,6 +72,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/google.maps": "3.58.1",
@@ -80,6 +82,7 @@
     "@types/react-helmet-async": "^1.0.1",
     "@vitejs/plugin-react": "6.1.1",
     "autoprefixer": "^10.4.21",
+    "deno": "2.9.6",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",

@@ -116,13 +116,14 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [lang, setLangState] = useState<Language>(
-    (localStorage.getItem("eop-language") as Language) || "en"
-  );
+  const [lang, setLangState] = useState<Language>(() => {
+    try { const stored = localStorage.getItem("eop-language"); return stored === "ro" || stored === "fr" ? stored : "en"; }
+    catch { return "en"; }
+  });
 
   const setLang = (newLang: Language) => {
     setLangState(newLang);
-    localStorage.setItem("eop-language", newLang);
+    try { localStorage.setItem("eop-language", newLang); } catch { /* Language still works for this page. */ }
   };
 
   const t = (key: string): string => {

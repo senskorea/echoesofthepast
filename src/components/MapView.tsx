@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MarkerClusterer } from "@googlemaps/markerclusterer";
 import { useNavigate } from "react-router-dom";
 import { Postcard } from "@/types/postcard";
-import { Loader2, MapPin, ClipboardCopy, Check, Home } from "lucide-react";
+import { Loader2, Home } from "lucide-react";
 
 interface MapViewProps {
   postcards: Postcard[];
@@ -14,62 +14,8 @@ const MapView = ({ postcards }: MapViewProps) => {
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const clustererRef = useRef<MarkerClusterer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [apiKey, setApiKey] = useState<string>("");
   const [showKeyInput, setShowKeyInput] = useState(false);
-  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
-
-  const SETUP_INSTRUCTIONS = `
-You are a setup assistant for GeoStories, an open-source interactive historical postcard mapping app.
-Help the user complete the following configuration steps:
-
----
-
-## 1. Google Maps API Key
-
-- Go to https://console.cloud.google.com/
-- Create or select a project.
-- Navigate to "APIs & Services" → "Library".
-- Enable the following APIs:
-  - Maps JavaScript API
-  - (Optional) Places API for address lookups
-- Go to "APIs & Services" → "Credentials" → "Create Credentials" → "API key".
-- Copy the key and restrict it to "HTTP referrers" pointing to your domain (e.g. localhost:8080 for local dev).
-- Paste the key into the GeoStories API key prompt.
-
-## 2. Supabase Project
-
-- Go to https://supabase.com/ and create a free account.
-- Create a new project and note your Project URL and anon/public API key (found under Settings → API).
-- Create a .env file in the project root with:
-
-  VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
-  VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
-
-## 3. AI API Key (for generation and JSON import)
-
-- Go to https://platform.openai.com/api-keys and create an API key.
-- Add a restricted personal key in the GeoStories Settings page. It is stored in this browser profile.
-- Do not place a project-wide AI key in a public Edge Function.
-
-## 4. Running locally
-
-  npm install
-  npm run dev
-
-  App starts at http://localhost:8080
-
----
-
-Please guide me step by step through whichever part I need help with.
-`.trim();
-
-  const handleCopyInstructions = () => {
-    navigator.clipboard.writeText(SETUP_INSTRUCTIONS).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
 
   const updateMarkers = useCallback(async () => {
     if (!mapInstanceRef.current) return;
@@ -190,9 +136,8 @@ Please guide me step by step through whichever part I need help with.
   }, [updateMarkers]);
 
   useEffect(() => {
-    const configuredKey = localStorage.getItem("google_maps_api_key") || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const configuredKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
     if (configuredKey) {
-      setApiKey(configuredKey);
       void initializeMap(configuredKey);
     } else {
       setShowKeyInput(true);
@@ -211,86 +156,11 @@ Please guide me step by step through whichever part I need help with.
   };
 
 
-  const handleApiKeySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const input = (e.target as HTMLFormElement).elements.namedItem(
-      "apiKey"
-    ) as HTMLInputElement;
-    const key = input.value.trim();
-    if (key) {
-      localStorage.setItem("google_maps_api_key", key);
-      setApiKey(key);
-      setShowKeyInput(false);
-      setIsLoading(true);
-      initializeMap(key);
-    }
-  };
-
   if (showKeyInput) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-background">
-        <div className="vintage-card p-8 max-w-md w-full mx-4">
-          <div className="flex items-center justify-center mb-6">
-            <MapPin className="w-12 h-12 text-accent" />
-          </div>
-          <h2 className="font-heading text-2xl font-semibold text-center mb-4">
-            Google Maps API Key Required
-          </h2>
-          <p className="text-muted-foreground text-center mb-6">
-            To display the interactive map, please enter your Google Maps API key.
-            Get one at{" "}
-            <a
-              href="https://console.cloud.google.com/google/maps-apis"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent hover:underline"
-            >
-              Google Cloud Console
-            </a>
-          </p>
-          <form onSubmit={handleApiKeySubmit} className="space-y-4">
-            <input
-              type="text"
-              name="apiKey"
-              placeholder="Enter your API key"
-              className="w-full px-4 py-3 rounded-lg border border-border bg-card focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all"
-              required
-            />
-            <button
-              type="submit"
-              className="w-full bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
-            >
-              Continue to Map
-            </button>
-          </form>
-
-          {/* Copy setup guide */}
-          <div className="mt-5 pt-5 border-t border-border">
-            <p className="text-xs text-muted-foreground text-center mb-3">
-              Not sure how to get an API key? Copy the full setup guide below
-              and paste it into any AI assistant (ChatGPT, Claude, etc.).
-            </p>
-            <button
-              type="button"
-              onClick={handleCopyInstructions}
-              className="w-full flex items-center justify-center gap-2 border border-border rounded-lg px-4 py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
-            >
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4 text-green-500" />
-                  <span className="text-green-600">Copied to clipboard!</span>
-                </>
-              ) : (
-                <>
-                  <ClipboardCopy className="w-4 h-4 text-accent" />
-                  Copy setup guide for AI assistant
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <div role="status" className="p-8 text-center">
+      <h2 className="text-xl mb-3">Map temporarily unavailable</h2>
+      <p>You can still explore all postcards using the Gallery button above.</p>
+    </div>;
   }
 
   return (

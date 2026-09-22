@@ -1,155 +1,73 @@
 # GeoStories — Echoes of the Past
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?logo=vite)](https://vitejs.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-Enabled-3ECF8E?logo=supabase)](https://supabase.com)
+Explore historical postcards, learn about AI and cultural heritage, and create stories and media from archival material.
 
-**GeoStories — Echoes of the Past** is an immersive, map-based historical storytelling platform and AI learning ecosystem. It transforms static archives—such as historical postcards—into dynamic narratives, visual renders, time-capsule letters, and interactive educational content.
+- [Public website](https://senskorea.github.io/echoesofthepast/)
+- [Learning Hub and quick guide](https://senskorea.github.io/echoesofthepast/learn)
+- [Source repository](https://github.com/senskorea/echoesofthepast)
 
----
+## Status
 
-## 🌟 Core Pillars & Platform Features
+Central services are implemented in this working version but **not deployed or live-tested yet**. GitHub Pages hosts the website; organisation-managed Supabase handles visitor sessions, AI requests and media storage. Visitors do not supply API keys. Generation and uploads start disabled until the operator configures the backend and usage limits. See [deployment instructions](DEPLOYMENT.md) and [readiness evidence](PUBLIC-LAUNCH-READINESS.md).
 
-### 1. 🗺️ GeoStories Interactive Mapping Platform
-- **Map-Based Storytelling:** Interactive Google Maps view with custom pin clustering, geographic metadata inferencing, and search filters.
-- **Historical Postcard Detail View:** Browse rich historical postcards with synchronized narrative storytelling, visual renders, time capsule letters, and audio narration.
-- **Dynamic Story Generation:** Generates multi-perspective historical context using multimodal LLMs.
+## Run locally
 
-### 2. 🎓 Interactive AI Learning Hub (MOOC & Smart Tutor)
-- **Comprehensive MOOC Platform (`/learn`):** Structured educational modules covering digital archiving, no-code AI tools, prompt engineering, and ethical AI in heritage preservation.
-- **Interactive Quizzes & Progress:** Module knowledge checks with instant grading and browser-based progress tracking.
-- **Persistent AI Smart Tutor Chatbot:** Floating AI assistant integrated across the platform to answer learner queries and explain historical archiving concepts interactively.
+Use Node.js 22.12 or newer in the Node 22 release line and npm.
 
-### 3. 🛠️ Heritage Preservation No-Code AI Archiving Tools
-- **AI Vision Auto-Extraction:** Instantly extracts transcription, visual descriptions, historical contexts, and coordinate estimates directly from uploaded postcard images.
-- **No-Code Asset Generation:** Generate architectural renders, fictional time-capsule letters, and video assets without writing a single line of code.
-- **Smart JSON Import/Export:** Import and export structured postcard archives with automated prompt format guides for external LLMs (ChatGPT, Claude, Gemini).
-
----
-
-## 🚀 Tech Stack
-
-- **Frontend Core:** React 18, TypeScript, Vite
-- **UI & Styling:** Tailwind CSS, shadcn/ui, Lucide Icons
-- **Mapping & Geolocation:** Google Maps JavaScript API with `@googlemaps/markerclusterer`
-- **AI Services & Integrations:** OpenAI and Gemini APIs, Supabase Edge Functions (Edge Deno runtime), Web Speech API
-- **State Management & Data:** `@tanstack/react-query`, `react-router-dom`, `react-helmet-async`
-
----
-
-## ⚙️ Getting Started
-
-### Prerequisites
-
-- **Node.js:** $\ge$ 18.0
-- **Google Maps JavaScript API Key:** (with Maps JavaScript API enabled)
-- **OpenAI / Gemini API Key:** (for AI vision and text generation)
-- **Supabase Project:** (URL & Anon key with a public `postcards` bucket)
-
-### Installation & Local Setup
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/geo-stories-eu.git
-cd geo-stories-eu
-
-# 2. Install dependencies
-npm install
-
-# 3. Create .env file from template
-cp .env.example .env
-
-# 4. Start local development server
+```sh
+git clone https://github.com/senskorea/echoesofthepast.git
+cd echoesofthepast
+npm ci
+# Preserve existing configuration.
+test -f .env || cp .env.example .env
 npm run dev
 ```
 
-The application will launch locally at **`http://localhost:8080`**.
+Open the address printed by Vite, normally `http://localhost:8080`. The bundled gallery, search, lessons and quizzes work without cloud credentials. External lesson videos need internet access.
 
----
+## Configuration
 
-## 🔑 Environment Variables & Security
+Set these in the ignored root `.env`, then restart Vite:
 
-Create a `.env` file in the root directory:
+| Variable | Purpose |
+| --- | --- |
+| `VITE_SUPABASE_URL` | Organisation's Supabase endpoint. |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Public project key. |
+| `VITE_CENTRAL_SERVICES_ENABLED` | `false` until hosted service checks pass. |
+| `VITE_AI_PROVIDER` | `gemini` by default, or `openai`. |
+| `VITE_GOOGLE_MAPS_API_KEY` | Maps browser key restricted to approved domains and the Maps JavaScript API. |
 
-```env
-VITE_SUPABASE_URL=https://<your-project>.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
-VITE_GOOGLE_MAPS_API_KEY=<optional-default-maps-key>
-```
+**Every `VITE_` value is public in the website bundle.** Gemini, OpenAI and service-role secrets belong only in the backend. Old browser API settings are ignored. Narration uses OpenAI; video uses Gemini, regardless of the selected default provider.
 
-> **Note:** Platform settings can also be configured interactively at runtime via the **Settings (`/settings`)** dashboard. Keys stored in browser `localStorage` are readable by scripts running on the same origin; use a dedicated browser profile and restricted API keys.
+## Your work
 
----
+Edits, saved creations and lesson progress stay in this browser. They do not automatically appear in everyone's catalogue or sync between devices. Select **Save to Creations** to retain a result and **Download File** for a device copy. Use **Settings → Your work & backups** to download or restore an archive before clearing browser data. Learning progress is not included in that archive.
 
-## ⚡ Supabase Edge Functions Deployment
+Uploaded and generated media are stored in a public-by-link bucket. Only upload material you may share. An archive contains media links, so download important media separately for an independent backup. A private-media or shared-publication workflow is outside this migration.
 
-The project includes Supabase Edge Functions in [`supabase/functions/`](file:///Users/paul/Documents/Shared/m1shared/agents/Echoes%20of%20the%20Past/geo-stories-eu-main/supabase/functions):
+## Verify
 
-- `generate-story`: Generates multi-perspective AI historical narratives.
-- `format-postcard-json`: Normalizes arbitrary JSON inputs into the platform's postcard schema.
-- `generate-video`: Triggers AI video rendering operations.
-
-To deploy Edge Functions to your Supabase project:
-
-```bash
-# Link to your Supabase project
-npx supabase link --project-ref <your-project-ref>
-
-# Deploy functions
-npx supabase functions deploy generate-story
-npx supabase functions deploy format-postcard-json
-npx supabase functions deploy generate-video
-```
-
----
-
-## 📦 Project Structure
-
-```
-geo-stories-eu/
-├── public/
-│   ├── favicon.ico
-│   ├── robots.txt
-│   └── sitemap.xml
-├── src/
-│   ├── components/
-│   │   ├── MapView.tsx          # Google Maps integration with clustering
-│   │   ├── ImportDialog.tsx     # AI Vision & JSON import modal
-│   │   ├── SmartTutor.tsx       # Floating AI Learning Assistant chatbot
-│   │   └── SEO.tsx             # Dynamic meta tags & SEO management
-│   ├── data/
-│   │   ├── mock-data.json       # Historical postcard dataset
-│   │   └── learning-content.ts  # MOOC modules, lessons, & quizzes
-│   ├── pages/
-│   │   ├── EOPHome.tsx          # Main interactive map & postcard gallery
-│   │   ├── PostcardDetail.tsx   # Item details, AI stories & render generator
-│   │   ├── LearnHub.tsx         # MOOC educational platform
-│   │   ├── Settings.tsx         # API key & platform setup dashboard
-│   │   └── NotFound.tsx         # 404 handler
-│   ├── lib/
-│   │   ├── ai-service.ts        # Unified AI text, image, audio, video handler
-│   │   └── supabase-config.ts   # Supabase client & settings persistence
-│   └── App.tsx                  # Main router & HelmetProvider wrapper
-└── supabase/
-    └── functions/               # Deno Edge Functions
-```
-
----
-
-## 🛠️ Building for Production
-
-To build the static application bundle for production deployment:
-
-```bash
+```sh
+npm test
+npm run lint -- --max-warnings=0
+npm run typecheck:server
 npm run build
+npm run preview
 ```
 
-Production output will be compiled into the `dist/` directory, ready for hosting on static providers (GitHub Pages, Vercel, Firebase Hosting, Netlify).
+Tests cover frontend failures, request reuse, provider adapters, handler access checks and a PostgreSQL quota ledger using PGlite. They do not replace deployed Supabase policy checks or paid-provider smoke tests. Production preview uses `/echoesofthepast/` and includes a static SPA fallback.
 
----
+## Troubleshooting
 
-## 📜 License
+- **Creation temporarily unavailable:** the operator must configure or restore the shared service; visitors do not need API keys.
+- **Daily allowance reached:** wait for the next UTC day. Failed requests can consume allowance because a provider may have processed them.
+- **Video takes too long:** use **Check video progress** to check the existing job. Do not repeatedly start new jobs.
+- **Browser cannot save:** download your work before freeing browser storage. Import validates the full archive before applying changes.
+- **Map unavailable:** the operator needs to configure its restricted Maps key; the gallery remains usable.
+- **Local changes missing elsewhere:** work is browser-local. Export and import to transfer it.
 
-Distributed under the MIT License. See [`LICENSE`](LICENSE) for details.
+## Deployment
+
+Pushes to `main` deploy the frontend using [GitHub Actions](.github/workflows/pages.yml). Supabase deployment is separate. Follow [DEPLOYMENT.md](DEPLOYMENT.md) before enabling services. Local `.env` files are never uploaded by Git. The Pages base path comes from the workflow; use `VITE_BASE_PATH=/ npm run build` for a separate root-domain build.
+
+See [LICENSE](LICENSE).

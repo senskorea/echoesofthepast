@@ -2,6 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ArrowLeft, MapPin, Loader2, Download, Save, Volume2, ImageIcon, FileText, Pencil, BookOpen, Mail, Clapperboard, Check, FileJson, Sparkles, ScanText, HeartPulse, Lightbulb, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, Play, Pause, Wand2, Layers } from "lucide-react";
 import { Postcard } from "@/types/postcard";
+import { friendlyError, ServiceError } from "@/lib/service-errors";
 import { getAIConfig } from "@/lib/supabase-config";
 import { TEXT_MODELS, IMAGE_MODELS, VIDEO_MODELS, AIModel } from "@/lib/ai-models";
 import { useLanguage } from "@/lib/i18n";
@@ -121,7 +122,7 @@ const PRESETS: Preset[] = [
 
 // ── Component ─────────────────────────────────────────────────
 const PostcardDetail = () => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -132,6 +133,10 @@ const PostcardDetail = () => {
   const [customPrompt, setCustomPrompt] = useState("");
   const [customType, setCustomType] = useState<AssetType>("text");
   const [injectVision, setInjectVision] = useState(false);
+  const [pendingVideoJob, setPendingVideoJob] = useState<string | null>(null);
+  useEffect(() => {
+    try { setPendingVideoJob(localStorage.getItem(`eop-video-job-${id}-${selectedPreset}`)); } catch { setPendingVideoJob(null); }
+  }, [id, selectedPreset]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageSource, setImageSource] = useState<"text" | "vision" | "actual">("text");
 
@@ -283,7 +288,7 @@ const PostcardDetail = () => {
     } catch (err) {
       toast({
         title: "Failed to polish prompt",
-        description: err instanceof Error ? err.message : "Error occurred.",
+        description: friendlyError(err, lang),
         variant: "destructive",
       });
     } finally {
@@ -361,7 +366,8 @@ const PostcardDetail = () => {
     // Auto-select first compatible model if none selected
     let modelId = selectedModel;
     if (!modelId) {
-      const compatible = preset.type === "image" ? IMAGE_MODELS : (preset.type === "video" ? VIDEO_MODELS : TEXT_MODELS);
+      const medium = preset.id === "custom" ? customType : preset.type;
+      const compatible = medium === "image" ? IMAGE_MODELS : (medium === "video" ? VIDEO_MODELS : TEXT_MODELS);
       modelId = compatible.find(m => m.provider === provider)?.id || compatible[0].id;
     }
 
@@ -370,6 +376,13 @@ const PostcardDetail = () => {
     setCurrentOutput(null);
 
     try {
+      if ((preset.id === "custom" ? customType : preset.type) === "video" && pendingVideoJob) {
+        const videoUrl = await pollVideoOperation(pendingVideoJob, setGenerationStatus);
+        localStorage.removeItem(`eop-video-job-${id}-${selectedPreset}`);
+        setPendingVideoJob(null);
+        setCurrentOutput({ type: "video", content: videoUrl });
+        return;
+      }
       let promptText = customPrompt.trim();
       const activeType = preset.id === "custom" ? customType : preset.type;
 
@@ -459,16 +472,22 @@ const PostcardDetail = () => {
           setCurrentOutput({ type: "audio", content: base64data as string, audioBlob: blob });
         };
       } else if (activeType === "video") {
-        const geminiKey = localStorage.getItem("gemini_api_key");
-        if (!geminiKey) throw new Error("Video generation requires a Gemini API key. Add it in Settings under AI Provider.");
 
         toast({ title: "Initiating Video...", description: `Using ${modelId}. Starting generation.` });
-        const opName = await generateVideo(promptText, modelId, base64Image, mimeType);
+        const jobKey = `eop-video-job-${id}-${selectedPreset}`;
+        let opName = localStorage.getItem(jobKey);
+        if (!opName) {
+          opName = await generateVideo(promptText, modelId, base64Image, mimeType);
+          setPendingVideoJob(opName);
+          localStorage.setItem(jobKey, opName);
+        }
 
         setGenerationStatus("Video generating... (poll #1)");
         const videoUrl = await pollVideoOperation(opName, (status) => {
           setGenerationStatus(status);
         });
+        localStorage.removeItem(jobKey);
+        setPendingVideoJob(null);
         setCurrentOutput({ type: "video", content: videoUrl });
 
       } else {
@@ -479,7 +498,13 @@ const PostcardDetail = () => {
 
       toast({ title: "Generated ✓", description: `Using ${modelId}. Hit Save to keep it.` });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Generation failed.";
+      // Only a definitive provider refusal permits a new video request.
+      // Network/timeouts keep the job so checking again cannot duplicate it.
+      if (err instanceof ServiceError && err.code === 'refused' && pendingVideoJob) {
+        try { localStorage.removeItem(`eop-video-job-${id}-${selectedPreset}`); } catch { /* Preserve safe failure. */ }
+        setPendingVideoJob(null);
+      }
+      const msg = friendlyError(err, lang);
       toast({
         title: "Generation failed",
         description: msg,
@@ -1057,7 +1082,7 @@ const PostcardDetail = () => {
                           {isGenerating ? (
                             <><Loader2 style={{ width: 16, height: 16 }} className="animate-spin" /> Processing...</>
                           ) : (
-                            <><Sparkles style={{ width: 16, height: 16 }} /> Generate {selectedPreset === "custom" ? (customType === "video" ? "Video" : customType) : activePreset.label}</>
+                            <><Sparkles style={{ width: 16, height: 16 }} /> {activeType === "video" && pendingVideoJob ? "Check video progress" : `Generate ${selectedPreset === "custom" ? customType : activePreset.label}`}</>
                           )}
                         </button>
                       </div>

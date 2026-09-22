@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Loader2, GraduationCap, User } from "lucide-react";
 import { generateText } from "../lib/ai-service";
 import { TEXT_MODELS } from "../lib/ai-models";
+import { friendlyError } from "../lib/service-errors";
+import { useLanguage } from "../lib/i18n";
 import { getAIConfig } from "../lib/supabase-config";
 import { Module, DEFAULT_SMART_TUTOR_CONTEXT } from "../data/learning-content";
 
@@ -15,6 +17,7 @@ interface SmartTutorProps {
 }
 
 const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
+  const { lang } = useLanguage();
   const [activeModule, setActiveModule] = useState<Module | null>(currentModule || null);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -51,7 +54,7 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
       const { provider } = getAIConfig();
       const modelId = TEXT_MODELS.find(m => m.provider === provider)?.id || TEXT_MODELS[0].id;
       
-      const customContext = localStorage.getItem("eop-smart-tutor-context") || DEFAULT_SMART_TUTOR_CONTEXT;
+      const customContext = DEFAULT_SMART_TUTOR_CONTEXT;
       
       let systemPrompt = `${customContext}\n\nCURRENT CONTEXT:\nYou are currently assisting the learner in the "${activeModule?.title || "Main Dashboard"}" section of the MOOC.`;
       
@@ -65,8 +68,8 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
       const response = await generateText(fullPrompt, modelId);
       setMessages(prev => [...prev, { role: "assistant", content: response }]);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setMessages(prev => [...prev, { role: "assistant", content: `I'm sorry, I encountered an error: ${message}` }]);
+      const message = friendlyError(err, lang);
+      setMessages(prev => [...prev, { role: "assistant", content: message }]);
     } finally {
       setIsLoading(false);
     }

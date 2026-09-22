@@ -6,6 +6,7 @@ import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import SEO from "../components/SEO";
 import { readQuizAnswers } from "../lib/learning-storage";
+import { friendlyError, ServiceError } from "../lib/service-errors";
 import QuickStartGuide from "../components/QuickStartGuide";
 
 const PUBLISHED_MODULES = MOOC_CONTENT.filter((module) => module.lessons.length > 0);
@@ -14,6 +15,7 @@ const LearnHub = () => {
   const { t, lang } = useLanguage();
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
+  const [storageWarning, setStorageWarning] = useState(false);
   const [copied, setCopied] = useState(false);
   const [openTranscripts, setOpenTranscripts] = useState<Record<string, boolean>>({});
   const [quizAnswers, setQuizAnswers] = useState(readQuizAnswers);
@@ -41,19 +43,21 @@ const LearnHub = () => {
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem("eop-completed-modules");
+    let saved: string | null = null;
+    try { saved = localStorage.getItem("eop-completed-modules"); } catch { setStorageWarning(true); }
+
     if (saved) {
       try {
         const parsed: unknown = JSON.parse(saved);
         if (Array.isArray(parsed)) setCompletedModules(parsed.filter((id): id is string => typeof id === "string"));
       } catch {
-        localStorage.removeItem("eop-completed-modules");
+        setStorageWarning(true);
       }
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("eop-quiz-answers", JSON.stringify(quizAnswers));
+    try { localStorage.setItem("eop-quiz-answers", JSON.stringify(quizAnswers)); } catch { setStorageWarning(true); }
   }, [quizAnswers]);
 
   useEffect(() => {
@@ -66,7 +70,7 @@ const LearnHub = () => {
       ? completedModules.filter(m => m !== id)
       : [...completedModules, id];
     setCompletedModules(newCompleted);
-    localStorage.setItem("eop-completed-modules", JSON.stringify(newCompleted));
+    try { localStorage.setItem("eop-completed-modules", JSON.stringify(newCompleted)); } catch { setStorageWarning(true); }
   };
 
   const handleCopyCurriculum = () => {
@@ -142,6 +146,7 @@ const LearnHub = () => {
           </div>
         </div>
 
+        {storageWarning && <p role="status" className="mb-6 rounded-lg border p-4">{friendlyError(new ServiceError("storage"), lang)}</p>}
         {!selectedModule && <QuickStartGuide />}
 
         {selectedModule ? (

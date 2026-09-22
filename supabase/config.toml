@@ -1,1 +1,5 @@
-project_id = "xyllwepplgclcfhlnhoy"
+project_id = "geostories"
+[functions.ai-gateway]
+verify_jwt = false
+# The handler verifies the session token with auth.getUser before any database,
+# storage or provider operation. Supports new signing keys, not public-key auth.

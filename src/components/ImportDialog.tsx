@@ -15,7 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { Postcard } from "@/types/postcard";
 import { getSupabaseConfig, getAIConfig } from "@/lib/supabase-config";
-import { getSupabaseClient } from "@/lib/supabase-client";
+import { generateText, uploadImage } from "@/lib/ai-service";
+import { TEXT_MODELS } from "@/lib/ai-models";
+import { friendlyError, ServiceError } from "@/lib/service-errors";
+import { useLanguage } from "@/lib/i18n";
 import { parsePostcards } from "@/lib/postcard-data";
 
 interface ImportDialogProps {
@@ -52,50 +55,18 @@ Here is my data to convert:
 [PASTE YOUR DATA HERE]
 `.trim();
 
-const BUCKET_SETUP_PROMPT = `
-You are a setup assistant for the Echoes of the Past platform, which uses Supabase for storage. Your goal is to help me create a public storage bucket.
-
-IMPORTANT INSTRUCTION: DO NOT dump all these instructions at once. That is overwhelming. Guide me interactively, step-by-step. Give me ONE step to do, wait for me to confirm I have done it, and only then provide the next step.
-
-Here is the process:
-1. Go to https://supabase.com/dashboard and open your project.
-2. In the left sidebar, click "Storage".
-3. Click "New bucket".
-4. Name it exactly: postcards
-5. Enable "Public bucket" (toggle it ON).
-6. Click "Save".
-7. Go to Storage → Policies and add an INSERT policy allowing public/anon uploads with the formula 'true'.
-
-Please begin by giving me just Step 1.
-`.trim();
-
 const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => {
   const [tab, setTab] = useState<Tab>("upload");
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { lang } = useLanguage();
 
   // ── Bucket health check ──
   const [bucketStatus, setBucketStatus] = useState<"unknown" | "ok" | "missing" | "no-config">("unknown");
-  const [copiedBucketGuide, setCopiedBucketGuide] = useState(false);
 
   const checkBucket = async () => {
     const { url, anonKey } = getSupabaseConfig();
-    if (!url || !anonKey) { setBucketStatus("no-config"); return; }
-    try {
-      const supabase = getSupabaseClient();
-      
-      const { error } = await supabase.storage.from("postcards").list("", { limit: 1 });
-      setBucketStatus(error ? "missing" : "ok");
-    } catch {
-      setBucketStatus("missing");
-    }
-  };
-
-  const handleCopyBucketGuide = () => {
-    navigator.clipboard.writeText(BUCKET_SETUP_PROMPT).then(() => {
-      setCopiedBucketGuide(true);
-      setTimeout(() => setCopiedBucketGuide(false), 2500);
-    });
+    setBucketStatus(url && anonKey && import.meta.env.VITE_CENTRAL_SERVICES_ENABLED === "true" ? "ok" : "no-config");
   };
 
   // ── Upload tab state ──
@@ -237,40 +208,17 @@ const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => 
   };
 
   const uploadToSupabase = async (fileParam?: File): Promise<string> => {
-    const fileToUpload = fileParam || imageFile;
-    if (!fileToUpload) throw new Error("No image selected");
-    const supabase = getSupabaseClient();
-    
-    const ext = fileToUpload.name.split(".").pop();
-    const filename = `${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("postcards")
-      .upload(filename, fileToUpload, { upsert: false, contentType: fileToUpload.type });
-      
-    if (error) {
-      if (error.message.includes("Bucket not found")) {
-        throw new Error("Storage Bucket 'postcards' does not exist in your Supabase project. Please go to your Supabase Dashboard -> Storage -> Create a new public bucket named 'postcards'.");
-      }
-      throw new Error(`Upload failed: ${error.message}`);
-    }
-    const { data } = supabase.storage.from("postcards").getPublicUrl(filename);
-    return data.publicUrl;
+    const file = fileParam || imageFile;
+    if (!file) throw new ServiceError("invalid");
+    return uploadImage(file);
   };
-
 
   const analyseWithAI = async () => {
     if (!imageFile) return;
     setAnalysing(true);
 
     try {
-      // ── Stage 1: Get AI config ──
-      const { provider, apiKey } = getAIConfig();
-      if (!apiKey) {
-        throw new Error(
-          `No ${provider === "gemini" ? "Gemini" : "OpenAI"} API key configured. Add it in Settings → AI Provider.`
-        );
-      }
-
+      const { provider } = getAIConfig();
       // ── Stage 2: Upload image to Supabase Storage (or skip if already done) ──
       let imgUrl = uploadedUrl;
       if (!imgUrl) {
@@ -278,10 +226,6 @@ const ImportDialog = ({ onImport, editingCard, trigger }: ImportDialogProps) => 
         try {
           imgUrl = await uploadToSupabase();
           setUploadedUrl(imgUrl);
-        } catch (uploadErr) {
-          throw new Error(
-            `Image upload failed: ${uploadErr instanceof Error ? uploadErr.message : "check that the 'postcards' bucket exists in Supabase Storage."}`
-          );
         } finally {
           setUploading(false);
         }
@@ -298,87 +242,28 @@ Return ONLY a JSON object with these fields (no markdown, no prose):
 }
 For coordinates: identify location from visual clues. If uncertain, give best estimate with confidence "low".`;
 
+      const bytes = new Uint8Array(await imageFile.arrayBuffer());
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+      const model = TEXT_MODELS.find(m => m.provider === provider)!;
+      const raw = await generateText(VISION_PROMPT, model.id, btoa(binary), imageFile.type);
       let result: { title: string; description: string; latitude: number; longitude: number };
-
-      // ── Stage 3: Call AI directly from browser ──
-      if (provider === "gemini") {
-        // Fetch image → base64 for Gemini inline_data
-        const imgRes = await fetch(imgUrl);
-        if (!imgRes.ok) throw new Error("Could not fetch the uploaded image for analysis.");
-        const imgBuffer = await imgRes.arrayBuffer();
-        // Convert to base64 in chunks — spread (...) on large arrays causes stack overflow
-        const bytes = new Uint8Array(imgBuffer);
-        let binary = "";
-        const chunkSize = 8192;
-        for (let i = 0; i < bytes.byteLength; i += chunkSize) {
-          binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
-        }
-        const base64 = btoa(binary);
-        const mimeType = imgRes.headers.get("content-type") || imageFile.type || "image/jpeg";
-
-        const geminiRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { inline_data: { mime_type: mimeType, data: base64 } },
-                  { text: VISION_PROMPT },
-                ],
-              }],
-              generationConfig: { maxOutputTokens: 600, temperature: 0.2 },
-            }),
-          }
-        );
-        if (!geminiRes.ok) {
-          const err = await geminiRes.json().catch(() => ({}));
-          throw new Error(err?.error?.message || `Gemini API error ${geminiRes.status}. Check your API key in Settings.`);
-        }
-        const geminiData = await geminiRes.json();
-        let raw = geminiData.candidates[0].content.parts[0].text.trim();
-        if (raw.startsWith("```")) raw = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "");
-        result = JSON.parse(raw);
-
-      } else {
-        // OpenAI vision models support public URLs directly.
-        const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            max_tokens: 600,
-            messages: [{
-              role: "user",
-              content: [
-                { type: "image_url", image_url: { url: imgUrl, detail: "high" } },
-                { type: "text", text: VISION_PROMPT },
-              ],
-            }],
-          }),
-        });
-        if (!openaiRes.ok) {
-          const err = await openaiRes.json().catch(() => ({}));
-          throw new Error(err?.error?.message || `OpenAI API error ${openaiRes.status}. Check your API key in Settings.`);
-        }
-        const openaiData = await openaiRes.json();
-        let raw = openaiData.choices[0].message.content.trim();
-        if (raw.startsWith("```")) raw = raw.replace(/```json\n?/g, "").replace(/```\n?$/g, "");
-        result = JSON.parse(raw);
-      }
+      try {
+        const parsed = JSON.parse(raw.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, ""));
+        result = parsePostcards({ ...parsed, id: "analysis" })[0];
+      } catch { throw new ServiceError("refused"); }
 
       setVisionResults(result);
       setFields({
         title: result.title || "",
         description: result.description || "",
-        latitude: String(result.latitude || ""),
-        longitude: String(result.longitude || ""),
+        latitude: String(result.latitude ?? ""),
+        longitude: String(result.longitude ?? ""),
       });
       toast({ title: "AI analysis complete ✓", description: "Fields auto-filled. Review and adjust as needed." });
 
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Could not analyse the image.";
+      const errorMsg = friendlyError(err, lang);
       toast({
         title: "Analysis failed",
         description: errorMsg,
@@ -388,15 +273,7 @@ For coordinates: identify location from visual clues. If uncertain, give best es
             <ToastAction altText="Copy error" onClick={() => navigator.clipboard.writeText(errorMsg)}>
               Copy Error
             </ToastAction>
-            {errorMsg.includes("not be deployed yet") && (
-              <ToastAction altText="Copy deploy command" onClick={() => {
-                const url = getSupabaseConfig().url;
-                const projectRef = url.split('.')[0].split('//')[1];
-                navigator.clipboard.writeText(`npx supabase functions deploy analyse-postcard-image --project-ref ${projectRef}`);
-              }}>
-                Copy Deploy Cmd
-              </ToastAction>
-            )}
+
           </div>
         ),
       });
@@ -476,7 +353,7 @@ For coordinates: identify location from visual clues. If uncertain, give best es
       resetAll();
       toast({ title: "Postcard added!", description: `"${postcard.title}" is now on the map.` });
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : "Please check your Supabase configuration in Settings.";
+      const errorMsg = friendlyError(err, lang);
       toast({
         title: "Upload failed",
         description: errorMsg,
@@ -519,31 +396,22 @@ For coordinates: identify location from visual clues. If uncertain, give best es
     }
     setIsProcessing(true);
     try {
-      const { url, anonKey } = getSupabaseConfig();
-      const { provider, apiKey } = getAIConfig();
-      let postcards: Postcard[] = [];
-      try {
-        const response = await fetch(`${url}/functions/v1/format-postcard-json`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${anonKey}` },
-          body: JSON.stringify({ json: jsonInput, provider, apiKey }),
-        });
-        if (!response.ok) {
-          throw new Error("Failed to format JSON via edge function");
-        }
-        const { formatted } = await response.json();
-        postcards = parsePostcards(formatted);
-      } catch (err) {
-        // Fallback: Try native client-side parsing
-        const parsed = JSON.parse(jsonInput);
-        postcards = parsePostcards(parsed);
+      // An exported archive never needs a paid AI request to restore it.
+      let postcards: Postcard[];
+      try { postcards = parsePostcards(JSON.parse(jsonInput)); }
+      catch {
+        const { provider } = getAIConfig();
+        const model = TEXT_MODELS.find(m => m.provider === provider)!;
+        const formatted = await generateText(JSON_FORMAT_PROMPT.replace('[PASTE YOUR DATA HERE]', jsonInput), model.id);
+        try { postcards = parsePostcards(JSON.parse(formatted.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, ''))); }
+        catch { throw new ServiceError('invalid'); }
       }
       onImport(postcards);
       setOpen(false);
       resetAll();
       toast({ title: "Import successful!", description: `Imported ${postcards.length} postcard${postcards.length > 1 ? "s" : ""}.` });
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Please check your JSON format.";
+      const errorMsg = error instanceof SyntaxError ? "This is not a supported GeoStories backup. Choose an exported JSON archive." : friendlyError(error, lang);
       toast({
         title: "Import failed",
         description: errorMsg,
@@ -602,33 +470,10 @@ For coordinates: identify location from visual clues. If uncertain, give best es
         {tab === "upload" && (
           <div className="import-upload-panel">
 
-            {/* Bucket warning */}
-            {(bucketStatus === "missing" || bucketStatus === "no-config") && (
-              <div className="import-bucket-warning">
-                <div className="import-bucket-warning-icon">
-                  <AlertTriangle style={{ width: 16, height: 16 }} />
-                </div>
-                <div className="import-bucket-warning-text">
-                  <p className="import-bucket-warning-title">
-                    {bucketStatus === "no-config"
-                      ? "Supabase not configured"
-                      : "Storage bucket missing"}
-                  </p>
-                  <p className="import-bucket-warning-sub">
-                    {bucketStatus === "no-config"
-                      ? <>Add your Supabase URL and key in <Link to="/settings" style={{textDecoration:"underline"}}>Settings</Link> first.</>
-                      : <>The <code style={{fontFamily:"monospace",fontSize:"0.8em"}}>postcards</code> bucket doesn't exist yet in your Supabase project.</>}
-                  </p>
-                </div>
-                {bucketStatus === "missing" && (
-                  <button className="import-copy-bucket-btn" onClick={handleCopyBucketGuide}>
-                    {copiedBucketGuide
-                      ? <><Check style={{ width: 12, height: 12 }} /> Copied!</>
-                      : <><ClipboardCopy style={{ width: 12, height: 12 }} /> Copy setup guide</>}
-                  </button>
-                )}
-              </div>
+            {bucketStatus === "no-config" && (
+              <p role="status" className="import-bucket-warning">{friendlyError(new ServiceError("unavailable"), lang)}</p>
             )}
+            <p className="text-sm text-muted-foreground mb-3">Upload only images you have permission to share. Uploaded media can be viewed by anyone with its link; your postcard is not automatically added to the public archive.</p>
 
             {/* Drop zone */}
             <div
