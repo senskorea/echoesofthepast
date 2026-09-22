@@ -25,15 +25,20 @@ export async function callService<T>(body: Record<string, unknown>, requestId?: 
       signal: AbortSignal.timeout(150_000),
     });
   } catch { throw new ServiceError('network', requestId); }
-  const result = await response.json().catch(() => ({}));
+  const result = await response.json().catch(() => null);
   if (!response.ok) {
     // A confirmed failure can be retried explicitly; uncertain or pending work
     // must keep its ID to avoid duplicate paid requests.
-    if (body.action !== 'poll' && (result.terminal === true || result.code === 'provider_busy')) {
+    if (body.action !== 'poll' && (result?.terminal === true || result?.code === 'provider_busy')) {
       try { localStorage.removeItem(key); } catch { /* Safe to keep the old ID. */ }
     }
-    throw responseError(response.status, result.code, requestId);
+    throw responseError(response.status, result?.code, requestId);
   }
+  const valid = result && (body.action === 'text' ? typeof result.text === 'string' && result.text.trim().length > 0
+    : body.action === 'video' ? typeof result.jobId === 'string' && result.jobId.length > 0
+    : body.action === 'poll' ? typeof result.done === 'boolean' && (!result.done || typeof result.url === 'string')
+    : typeof result.url === 'string' && /^https:\/\//.test(result.url));
+  if (!valid) throw new ServiceError('unavailable', requestId);
   if (body.action !== 'poll') { try { localStorage.removeItem(key); } catch { /* Cached server result remains safe. */ } }
   return result as T;
 }

@@ -331,15 +331,15 @@ Enfin, nous pouvons jeter un coup d'œil à la page des paramètres. C'est ici q
         explanation: "Once you generate creative assets (such as architectural renders or historical texts), you can save them so they remain attached to that specific postcard in its creative space."
       },
       {
-        question: "What is the purpose of the setup guide button on the Settings page?",
+        question: "Where can you find instructions for installing your own copy of the platform?",
         options: [
-          "To book a call with a professional archivist",
-          "To copy an interactive step-by-step setup prompt to guide an AI assistant in helping you install the platform",
-          "To buy licenses for Google Maps and OpenAI",
-          "To download the installation manuals in French and Romanian"
+          "In the postcard image viewer",
+          "In the README & installation guide on the Learn page",
+          "In the daily creation allowance message",
+          "In the map markers"
         ],
         correctAnswer: 1,
-        explanation: "The setup guide button copies an interactive, step-by-step assistant prompt to your clipboard, which can be pasted into ChatGPT, Claude, or Gemini to guide you through platform installation and configuration."
+        explanation: "The Learn page includes the README & installation guide with links to GitHub and deployment instructions. Visitors to the public site do not need to install anything or provide API keys."
       }
     ]
   },

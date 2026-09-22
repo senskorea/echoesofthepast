@@ -45,3 +45,15 @@ it.each([{code:'provider_busy'}, {code:'unavailable',terminal:true}])('allows an
   await generateText('retry me','gemini-3.6-flash');
   expect(JSON.parse(mock.mock.calls[0][1].body).requestId).not.toBe(JSON.parse(mock.mock.calls[1][1].body).requestId);
 });
+it.each([null,{}, {text:''}])('retains the request ID for malformed success responses: %j',async result=>{
+ const mock=vi.fn().mockResolvedValueOnce(Response.json(result)).mockResolvedValueOnce(Response.json({text:'recovered'}));vi.stubGlobal('fetch',mock);
+ await expect(generateText('same','gemini-3.6-flash')).rejects.toMatchObject({code:'unavailable'});
+ expect(await generateText('same','gemini-3.6-flash')).toBe('recovered');
+ expect(JSON.parse(mock.mock.calls[0][1].body).requestId).toBe(JSON.parse(mock.mock.calls[1][1].body).requestId);
+});
+it('retains the request ID when the server says work is pending',async()=>{
+ const mock=vi.fn().mockResolvedValueOnce(Response.json({code:'busy'},{status:409})).mockResolvedValueOnce(Response.json({text:'completed'}));vi.stubGlobal('fetch',mock);
+ await expect(generateText('pending','gemini-3.6-flash')).rejects.toMatchObject({code:'busy'});
+ await generateText('pending','gemini-3.6-flash');
+ expect(JSON.parse(mock.mock.calls[0][1].body).requestId).toBe(JSON.parse(mock.mock.calls[1][1].body).requestId);
+});

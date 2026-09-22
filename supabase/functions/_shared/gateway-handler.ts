@@ -92,7 +92,7 @@ return async (req: Request) => {
     if (reservation.code) throw new GatewayError(reservation.code,reservation.code==='limit' ? 429 : reservation.code==='invalid' ? 400 : 503);
     if (reservation.cached) {
       const job=reservation.job;
-      if (job.status==='complete' || (job.status==='pending' && job.action==='video')) return reply(job.result);
+      if (job.status==='complete' || (job.status==='pending' && job.action==='video' && job.result?.jobId)) return reply(job.result);
       if (job.status==='failed') return reply({code:job.error_code || 'unavailable',requestId,terminal:true},503);
       throw new GatewayError('busy',409);
     }
@@ -109,8 +109,9 @@ return async (req: Request) => {
     } catch(error) {
       const code=error instanceof GatewayError ? error.code : 'unavailable';
       await update(input.requestId,{status:'failed',error_code:code});
-      // Failed reservations count toward allowance. Never retry paid calls here.
-      throw error;
+      // The failed state is confirmed. Let an explicit retry use a new ID.
+      // Failed reservations still count; never retry paid calls automatically.
+      return reply({code,requestId,terminal:true},error instanceof GatewayError ? error.status : 503);
     }
   } catch(error) {
     const known=error instanceof GatewayError;

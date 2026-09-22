@@ -47,3 +47,20 @@ it('marks cached failures terminal without calling the provider again',async()=>
   expect(await response.json()).toEqual({code:'unavailable',requestId:id,terminal:true});
   expect(mock).toHaveBeenCalledTimes(2);
 });
+it('keeps a starting video pending until the provider job has been saved',async()=>{
+ const mock=vi.fn(async(url:RequestInfo|URL)=>String(url).includes('/auth/v1/user') ? Response.json({id:owner}) : Response.json({cached:true,job:{status:'pending',action:'video',result:null}}));vi.stubGlobal('fetch',mock);
+ const response=await createGateway(k=>env[k])(request({action:'video',requestId:id,prompt:'history',modelId:'veo-3.1-generate-preview'}));
+ expect(response.status).toBe(409);expect(await response.json()).toMatchObject({code:'busy'});expect(mock).toHaveBeenCalledTimes(2);
+});
+it('confirms a provider failure is terminal after persisting it',async()=>{
+ const mock=vi.fn(async(url:RequestInfo|URL)=>{
+  const path=String(url);
+  if(path.includes('/auth/v1/user'))return Response.json({id:owner});
+  if(path.includes('/rpc/'))return Response.json({});
+  if(path.includes('generativelanguage'))return Response.json({error:{message:'unavailable'}},{status:503});
+  return new Response(null,{status:204});
+ });vi.stubGlobal('fetch',mock);
+ const response=await createGateway(k=>env[k])(request());
+ expect(response.status).toBe(503);expect(await response.json()).toMatchObject({code:'provider_busy',terminal:true});
+ expect(mock.mock.calls.filter(([url])=>String(url).includes('generativelanguage'))).toHaveLength(1);
+});

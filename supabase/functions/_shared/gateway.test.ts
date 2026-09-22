@@ -66,3 +66,19 @@ it('distinguishes provider outages without exposing raw provider messages',async
     expect(mock).toHaveBeenCalledTimes(1);
   } finally {log.mockRestore();}
 });
+it.each([429,500,502,503,504])('handles provider HTTP %s without automatic paid retries',async status=>{
+ const mock=vi.fn(async()=>Response.json({error:{message:'private'}},{status}));
+ await expect(generate({action:'text',requestId,prompt:'test',modelId:'gemini-3.6-flash'},()=> 'key',mock)).rejects.toMatchObject({code:status===429?'limit':status===503?'provider_busy':'unavailable'});
+ expect(mock).toHaveBeenCalledTimes(1);
+});
+it('accepts Gemini image output after checking input tokens',async()=>{
+ const mock=vi.fn().mockResolvedValueOnce(Response.json({totalTokens:10})).mockResolvedValueOnce(Response.json({candidates:[{content:{parts:[{inlineData:{data:'AQID',mimeType:'image/png'}}]}}]}));
+ const result=await generate({action:'image',requestId,prompt:'test',modelId:'gemini-3.1-flash-image'},()=> 'key',mock);
+ expect(result).toMatchObject({mime:'image/png',bytes:new Uint8Array([1,2,3])});
+});
+it('accepts narration audio and video operation handles',async()=>{
+ const audio=await generate({action:'audio',requestId,prompt:'hello'},()=> 'key',vi.fn(async()=>new Response(new Uint8Array([1,2]))));
+ expect(audio).toMatchObject({mime:'audio/mpeg'});
+ const video=await generate({action:'video',requestId,prompt:'hello',modelId:'veo-3.1-generate-preview'},()=> 'key',vi.fn(async()=>Response.json({name:'models/veo-3.1-generate-preview/operations/test'})));
+ expect(video).toEqual({operation:'models/veo-3.1-generate-preview/operations/test'});
+});

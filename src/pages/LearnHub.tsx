@@ -202,6 +202,7 @@ const LearnHub = () => {
                         ></iframe>
                       </div>
                       <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: 12 }}>{lesson.title}</h3>
+                      {lesson.id === "m2-l1" && <p role="note" className="rounded-lg border p-4 mb-4">{lang === "ro" ? "Acest videoclip prezintă o versiune mai veche. Serviciile AI sunt acum gestionate central; vizitatorii nu introduc chei API. Ghidul README și de instalare se află pe pagina Learn, iar Setările gestionează copiile de siguranță." : lang === "fr" ? "Cette vidéo présente une ancienne version. Les services d’IA sont désormais centralisés : aucune clé API n’est demandée aux visiteurs. Le guide README et d’installation se trouve sur la page Learn ; les paramètres gèrent les sauvegardes." : "This video shows an earlier version. AI services are now managed centrally; visitors do not enter API keys. The README & installation guide is on the Learn page, while Settings manages your backups."}</p>}
                       <p style={{ color: "var(--grey-2)", lineHeight: 1.6, marginBottom: 24 }}>{lesson.description}</p>
                       
                       <div style={{ background: "var(--grey-6)", borderRadius: 12 }}>

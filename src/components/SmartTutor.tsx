@@ -2,15 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, Send, Loader2, GraduationCap, User } from "lucide-react";
 import { generateText } from "../lib/ai-service";
 import { TEXT_MODELS } from "../lib/ai-models";
+import { tutorHistory, failedTutorTurn, type TutorMessage } from "../lib/tutor-history";
 import { friendlyError } from "../lib/service-errors";
 import { useLanguage } from "../lib/i18n";
 import { getAIConfig, isCreationEnabled } from "../lib/supabase-config";
 import { Module, DEFAULT_SMART_TUTOR_CONTEXT } from "../data/learning-content";
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
 
 interface SmartTutorProps {
   currentModule?: Module | null;
@@ -20,7 +16,7 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
   const { lang } = useLanguage();
   const [activeModule, setActiveModule] = useState<Module | null>(currentModule || null);
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
+  const [messages, setMessages] = useState<TutorMessage[]>([
     { 
       role: "assistant", 
       content: "Hello! I am your Smart Tutor. I can help you understand the EOP platform, guide you through the AI modules, or answer any questions about historical preservation. How can I help you today?" 
@@ -45,7 +41,7 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMsg = input.trim();
+    const userMsg = input.trim().slice(0, 4000);
     setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMsg }]);
     setIsLoading(true);
@@ -62,14 +58,15 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
         systemPrompt += `\nModule Details: ${activeModule.shortDesc}`;
       }
 
-      const history = messages.slice(-10).map(m => `${m.role === "user" ? "User" : "Tutor"}: ${m.content}`).join("\n");
+      const history = tutorHistory(messages);
       const fullPrompt = `${systemPrompt}\n\nCHAT HISTORY:\n${history}\n\nUser: ${userMsg}\n\nTutor:`;
 
       const response = await generateText(fullPrompt, modelId);
       setMessages(prev => [...prev, { role: "assistant", content: response }]);
     } catch (err: unknown) {
       const message = friendlyError(err, lang);
-      setMessages(prev => [...prev, { role: "assistant", content: message }]);
+      setMessages(prev => failedTutorTurn(prev, message));
+      setInput(current => current || userMsg);
     } finally {
       setIsLoading(false);
     }
@@ -189,6 +186,7 @@ const SmartTutor = ({ currentModule }: SmartTutorProps = {}) => {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="Ask a question..."
+              maxLength={4000}
               style={{ flexGrow: 1, border: "1px solid var(--grey-5)", borderRadius: 12, padding: "10px 16px", fontSize: "0.9rem", outline: "none" }}
             />
             <button 
