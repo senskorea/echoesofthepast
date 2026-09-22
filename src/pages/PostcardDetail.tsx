@@ -625,6 +625,11 @@ const PostcardDetail = () => {
             {postcard.description && (
               <p className="pd-description">{postcard.description}</p>
             )}
+            {postcard.detailUrl && /^https?:\/\//.test(postcard.detailUrl) && (
+              <a href={postcard.detailUrl} target="_blank" rel="noopener noreferrer" className="pd-action-btn">
+                View original postcard record ↗
+              </a>
+            )}
             <button 
               onClick={handleExport}
               className="pd-action-btn" 

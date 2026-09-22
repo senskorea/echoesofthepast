@@ -1,30 +1,57 @@
 [
   {
-    "id": "pc_paris_etoile_aerial_1900s",
-    "title": "Aerial Panorama of Place de l'Étoile, Paris",
-    "description": "An early 20th-century aerial photograph of the Place de l'Étoile (now Place Charles de Gaulle) in Paris, featuring the Arc de Triomphe at its center. The photo was taken from a balloon at an altitude of 700 meters.",
-    "latitude": 48.8738,
-    "longitude": 2.295,
-    "imageUrl": "/eop-images/pc_paris_etoile_aerial_1900s.webp",
-    "detailUrl": "#"
+    "id": "sa_20260904T164341",
+    "title": "Parlament am Franzensring in Wien",
+    "description": "A vintage colored postcard showing the Austrian Parliament Building (Parlament) on the Franzensring in Vienna, Austria, with a handwritten date of 18-12-06.",
+    "latitude": 48.2082,
+    "longitude": 16.3578,
+    "imageUrl": "/eop-images/sa_20260904T164341-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/AUT/AT-VIE/20260904T164341"
   },
   {
-    "id": "20250930T113001",
-    "title": "Foișorul de Foc, Bucharest, Romania",
-    "description": "A vintage postcard depicting the Foișorul de Foc (The Fire Tower) in Bucharest. The card was postally used in 1903 and published by Ad. Maier & D. Stern.",
-    "latitude": 44.4419,
-    "longitude": 26.115,
-    "imageUrl": "/eop-images/20250930T113001.png",
-    "detailUrl": "#"
+    "id": "sa_20260904T164559",
+    "title": "Greetings from Turkestan (Поклонъ изъ Туркестана)",
+    "description": "An undivided back postcard illustrated with vignettes of traditional Central Asian transportation including a high-wheeled arba cart, camels, and horseback riders, mailed from Tashkent in 1900.",
+    "latitude": 41.2995,
+    "longitude": 69.2401,
+    "imageUrl": "/eop-images/sa_20260904T164559-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/UZB/UZ-TAS/20260904T164559"
   },
   {
-    "id": "pc_ateneul_roman",
-    "title": "Ateneul Român (Romanian Athenaeum), Bucharest",
-    "description": "A vintage postcard featuring the Romanian Athenaeum, a famous concert hall in Bucharest, surrounded by its park. The image captures the grandeur of the building and its green surroundings.",
-    "latitude": 44.4402,
-    "longitude": 26.0975,
-    "imageUrl": "/eop-images/pc_ateneul_roman.png",
-    "detailUrl": "#"
+    "id": "sa_20260904T164325",
+    "title": "Venezia - Grand Canal and Rialto Bridge",
+    "description": "A picturesque view of the Grand Canal in Venice bustling with gondolas and boats, with the iconic Rialto Bridge in the background under a clear blue sky.",
+    "latitude": 45.438,
+    "longitude": 12.3358,
+    "imageUrl": "/eop-images/sa_20260904T164325-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ITA/IT-VCE/20260904T164325"
+  },
+  {
+    "id": "sa_20260904T164453",
+    "title": "Iasi Universitatea",
+    "description": "Historical postcard depicting the main building of Alexandru Ioan Cuza University in Iași, Romania, with a monument in the foreground.",
+    "latitude": 47.1741,
+    "longitude": 27.5716,
+    "imageUrl": "/eop-images/sa_20260904T164453-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-IAS/20260904T164453"
+  },
+  {
+    "id": "sa_20251011T084348",
+    "title": "Bucharest, CEC Palace & Grand Hotel",
+    "description": "A vintage colored postcard showing the CEC Palace and the Grand Hotel du Boulevard on Calea Victoriei in Bucharest, Romania. The street scene includes pedestrians and horse-drawn carriages.",
+    "latitude": 44.4317,
+    "longitude": 26.0969,
+    "imageUrl": "/eop-images/sa_20251011T084348-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BUH/20251011T084348"
+  },
+  {
+    "id": "sa_20260904T125521",
+    "title": "Școala Laurian, București",
+    "description": "Historical postcard showing the Laurian School building in Bucharest with handwritten messages in Romanian.",
+    "latitude": 44.4323,
+    "longitude": 26.1063,
+    "imageUrl": "/eop-images/sa_20260904T125521-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BUH/20260904T125521"
   },
   {
     "id": "pc_palatul_printului_sturza",
@@ -32,8 +59,177 @@
     "description": "A vintage postcard featuring the ornate Sturza Palace in Bucharest, with details of its elaborate architecture and a street scene with pedestrians. The postcard is postally used with two Romanian stamps.",
     "latitude": 44.4361,
     "longitude": 26.0964,
-    "imageUrl": "/eop-images/pc_palatul_printului_sturza.png",
-    "detailUrl": "#"
+    "imageUrl": "/eop-images/pc_palatul_printului_sturza-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BUH/20250930T121800",
+    "secondaryImages": [
+      "/eop-images/pc_palatul_printului_sturza-source-1.png",
+      "/eop-images/pc_palatul_printului_sturza-source-2.png"
+    ]
+  },
+  {
+    "id": "sa_20260904T164247",
+    "title": "University Square, Bucharest",
+    "description": "A vintage monochrome postcard showing University Square in Bucharest, Romania, featuring modernist and neoclassical architecture.",
+    "latitude": 44.4355,
+    "longitude": 26.1025,
+    "imageUrl": "/eop-images/sa_20260904T164247-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BUH/20260904T164247"
+  },
+  {
+    "id": "sa_20260904T164623",
+    "title": "Palatul Regal, Bucuresti",
+    "description": "Historical postcard showing the Royal Palace in Bucharest (Palatul Regal) with its front courtyard, garden, and fountain.",
+    "latitude": 44.4379,
+    "longitude": 26.0952,
+    "imageUrl": "/eop-images/sa_20260904T164623-source-0.png",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BUH/20260904T164623"
+  },
+  {
+    "id": "20250930T113001",
+    "title": "Foișorul de Foc, Bucharest, Romania",
+    "description": "A vintage postcard depicting the Foișorul de Foc (The Fire Tower) in Bucharest. The card was postally used in 1903 and published by Ad. Maier & D. Stern.",
+    "latitude": 44.4419,
+    "longitude": 26.115,
+    "imageUrl": "/eop-images/20250930T113001-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BUH/20250930T113001",
+    "secondaryImages": [
+      "/eop-images/20250930T113001-source-1.png",
+      "/eop-images/20250930T113001-source-2.png"
+    ]
+  },
+  {
+    "id": "sa_20251011T011459",
+    "title": "București, Piața Senatului",
+    "description": "A vintage sepia postcard showing the busy Piața Senatului in Bucharest, with prominent buildings like the Palace of the Senate and the Adriatica-Trieste Palace, along with period vehicles like trams and cars.",
+    "latitude": 44.429,
+    "longitude": 26.097,
+    "imageUrl": "/eop-images/sa_20251011T011459-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BUH/20251011T011459"
+  },
+  {
+    "id": "pc_ateneul_roman",
+    "title": "Ateneul Român (Romanian Athenaeum), Bucharest",
+    "description": "A vintage postcard featuring the Romanian Athenaeum, a famous concert hall in Bucharest, surrounded by its park. The image captures the grandeur of the building and its green surroundings.",
+    "latitude": 44.4402,
+    "longitude": 26.0975,
+    "imageUrl": "/eop-images/pc_ateneul_roman-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BUH/20250930T120700",
+    "secondaryImages": [
+      "/eop-images/pc_ateneul_roman-source-1.jpg",
+      "/eop-images/pc_ateneul_roman-source-2.png"
+    ]
+  },
+  {
+    "id": "sa_20260904T164601",
+    "title": "București - Grădina Cișmegiu",
+    "description": "Color tinted vintage postcard showing promenading visitors along a pathway by the lake in Cișmigiu Gardens, Bucharest.",
+    "latitude": 44.4368,
+    "longitude": 26.0911,
+    "imageUrl": "/eop-images/sa_20260904T164601-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BUH/20260904T164601"
+  },
+  {
+    "id": "sa_20260904T163857",
+    "title": "Sinaia - Gara",
+    "description": "Panoramic view of the railway station complex and tracks in Sinaia, Romania, set against the forested Carpathian hillside.",
+    "latitude": 45.3533,
+    "longitude": 25.5539,
+    "imageUrl": "/eop-images/sa_20260904T163857-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-SIN/20260904T163857"
+  },
+  {
+    "id": "sa_20260904T164239",
+    "title": "Brașov - Kronstadt with the Black Church",
+    "description": "Vintage black and white postcard offering an elevated panoramic view over the historic center of Brașov (Kronstadt), centered on the Gothic Black Church (Biserica Neagră).",
+    "latitude": 45.6411,
+    "longitude": 25.5878,
+    "imageUrl": "/eop-images/sa_20260904T164239-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BV/20260904T164239"
+  },
+  {
+    "id": "sa_20251011T021121",
+    "title": "Nagyvárad, Emke Café and Szigligeti Theatre",
+    "description": "A sepia-toned postcard showing the cityscape of Nagyvárad (Oradea), featuring the Emke Café, Szigligeti Theatre, and the surrounding square with horse-drawn carriages.",
+    "latitude": 47.0561,
+    "longitude": 21.9313,
+    "imageUrl": "/eop-images/sa_20251011T021121-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BH/20251011T021121"
+  },
+  {
+    "id": "sa_20251011T095854",
+    "title": "Nagyvárad, Körösparti részlet",
+    "description": "Black and white postcard showing the Crișul Repede (Sebes-Körös) river in Nagyvárad (Oradea), with several prominent buildings on the bank, including the City Hall tower, the Financial Palace, and the Szent László Bridge.",
+    "latitude": 47.056,
+    "longitude": 21.931,
+    "imageUrl": "/eop-images/sa_20251011T095854-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-BH/20251011T095854"
+  },
+  {
+    "id": "sa_20251011T022052",
+    "title": "Postcard of Peleș Castle, Sinaia, Romania",
+    "description": "A black and white postcard showing a view of Peleș Castle from a grassy hillside, sent from Sinaia, Romania to Coblenz, Germany in 1907.",
+    "latitude": 45.36,
+    "longitude": 25.5425,
+    "imageUrl": "/eop-images/sa_20251011T022052-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-PH/20251011T022052",
+    "secondaryImages": [
+      "/eop-images/sa_20251011T022052-source-1.jpg",
+      "/eop-images/sa_20251011T022052-source-2.jpg"
+    ]
+  },
+  {
+    "id": "sa_20260904T164312",
+    "title": "Salutări din România - Sinaia",
+    "description": "Vintage lithographic postcard depicting a panoramic view of Sinaia and the Bucegi Mountains with an undivided front message area.",
+    "latitude": 45.352,
+    "longitude": 25.551,
+    "imageUrl": "/eop-images/sa_20260904T164312-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-PH/20260904T164312"
+  },
+  {
+    "id": "sa_20251011T020653",
+    "title": "Constanța - Cazinul.",
+    "description": "A colorized postcard depicting a panoramic view of the Constanța Casino on the Black Sea coast, with the Genovese Lighthouse in the foreground.",
+    "latitude": 44.1725,
+    "longitude": 28.6635,
+    "imageUrl": "/eop-images/sa_20251011T020653-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-CT/20251011T020653"
+  },
+  {
+    "id": "sa_20260904T162231",
+    "title": "La fortul Otopeni. Manevrele regale",
+    "description": "Black and white historical postcard showing royalty and military officers observing royal military maneuvers at Fort Otopeni near Bucharest, circa 1895.",
+    "latitude": 44.545,
+    "longitude": 26.075,
+    "imageUrl": "/eop-images/sa_20260904T162231-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-IF/20260904T162231"
+  },
+  {
+    "id": "sa_20260904T164248",
+    "title": "HUNEDOARA - Castelul Huniazilor",
+    "description": "Black and white postcard view of the dramatic Corvin Castle (Hunyadi Castle) in Hunedoara, Romania, highlighting the iconic tall conical towers and Gothic rooflines.",
+    "latitude": 45.7494,
+    "longitude": 22.8883,
+    "imageUrl": "/eop-images/sa_20260904T164248-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-HD/20260904T164248"
+  },
+  {
+    "id": "sa_20260904T163943",
+    "title": "Castelul Huniazilor, Hunedoara",
+    "description": "Black and white vintage postcard showing a view of the towers and ramparts of Corvin Castle (Castelul Huniazilor) in Hunedoara, Romania.",
+    "latitude": 45.7494,
+    "longitude": 22.8883,
+    "imageUrl": "/eop-images/sa_20260904T163943-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/ROU/RO-HD/20260904T163943"
+  },
+  {
+    "id": "sa_20260904T164429",
+    "title": "Stockholm Waterfront and Gamla Stan Skyline",
+    "description": "A scenic view across the water showing the historic Skeppsbron waterfront, boats moored along the quay, and the German Church (Tyska kyrkan) spire in Stockholm.",
+    "latitude": 59.3245,
+    "longitude": 18.0735,
+    "imageUrl": "/eop-images/sa_20260904T164429-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/SWE/SE-STO/20260904T164429"
   },
   {
     "id": "pc_los_angeles_large_letter_linen",
@@ -41,7 +237,80 @@
     "description": "A classic 'Large Letter' linen postcard from Los Angeles, California. Each letter of 'LOS ANGELES' contains a different iconic scene from the city and its surroundings.",
     "latitude": 34.0522,
     "longitude": -118.2437,
-    "imageUrl": "/eop-images/pc_los_angeles_large_letter_linen.png",
-    "detailUrl": "#"
+    "imageUrl": "/eop-images/pc_los_angeles_large_letter_linen-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/USA/US-LAX/20250930T123200",
+    "secondaryImages": [
+      "/eop-images/pc_los_angeles_large_letter_linen-source-1.png"
+    ]
+  },
+  {
+    "id": "sa_20250930T123600",
+    "title": "Empire State Building, New York City",
+    "description": "A classic linen-era postcard showcasing the Empire State Building as it towers over the surrounding Midtown Manhattan cityscape, printed by Curt Teich & Co.",
+    "latitude": 40.7484,
+    "longitude": -73.9857,
+    "imageUrl": "/eop-images/sa_20250930T123600-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/USA/US-NYC/20250930T123600"
+  },
+  {
+    "id": "sa_20260904T164124",
+    "title": "Burns Cottage and Monument Ayr Christmas Postcard",
+    "description": "A vintage colorized postcard featuring a portrait of Robert Burns, Burns Cottage, and Burns Monument in Ayr, Scotland, with a handwritten Christmas and New Year greeting.",
+    "latitude": 55.4281,
+    "longitude": -4.6341,
+    "imageUrl": "/eop-images/sa_20260904T164124-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/GBR/GB-SCT/20260904T164124"
+  },
+  {
+    "id": "sa_20260904T163842",
+    "title": "Souvenir de Paris 1900 - Paris La Tour Eiffel",
+    "description": "Artistic souvenir postcard from 1900 featuring an elevated panoramic view of the Eiffel Tower and the 1900 Paris Exposition Universelle grounds within an ornate decorative border.",
+    "latitude": 48.85837,
+    "longitude": 2.294481,
+    "imageUrl": "/eop-images/sa_20260904T163842-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/FRA/FR-PAR/20260904T163842"
+  },
+  {
+    "id": "pc_paris_etoile_aerial_1900s",
+    "title": "Aerial Panorama of Place de l'Étoile, Paris",
+    "description": "An early 20th-century aerial photograph of the Place de l'Étoile (now Place Charles de Gaulle) in Paris, featuring the Arc de Triomphe at its center. The photo was taken from a balloon at an altitude of 700 meters.",
+    "latitude": 48.8738,
+    "longitude": 2.295,
+    "imageUrl": "/eop-images/pc_paris_etoile_aerial_1900s-source-0.webp",
+    "detailUrl": "https://small.academy/eop/post/FRA/FR-PAR/20250930T122500",
+    "secondaryImages": [
+      "/eop-images/pc_paris_etoile_aerial_1900s-source-1.png",
+      "/eop-images/pc_paris_etoile_aerial_1900s-source-2.png"
+    ]
+  },
+  {
+    "id": "sa_20251010T234100",
+    "title": "Panorama of Avenue d'Iéna and Kléber, Paris",
+    "description": "A panoramic view of Paris from the Arc de Triomphe, looking towards the Eiffel Tower. The tree-lined Avenue d'Iéna is on the left and Avenue Kléber is on the right. A group of people in period attire observe the view from the balcony.",
+    "latitude": 48.8738,
+    "longitude": 2.295,
+    "imageUrl": "/eop-images/sa_20251010T234100-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/FRA/FR-PAR/20251010T234100"
+  },
+  {
+    "id": "sa_20251011T024118",
+    "title": "Paris — La Tour Eiffel",
+    "description": "A colorized postcard depicting the Eiffel Tower as viewed from the Jardins du Trocadéro, with the Champ de Mars and the Grande Roue de Paris visible in the background.",
+    "latitude": 48.8584,
+    "longitude": 2.2945,
+    "imageUrl": "/eop-images/sa_20251011T024118-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/FRA/FR-PAR/20251011T024118",
+    "secondaryImages": [
+      "/eop-images/sa_20251011T024118-source-1.png"
+    ]
+  },
+  {
+    "id": "sa_20251011T000100",
+    "title": "Notre-Dame de Lorette Chapel, Paris",
+    "description": "A print showing the first chapel named Notre-Dame de Lorette in Paris, built before 1646 and destroyed in 1800. It includes a drawing of the chapel, a map from 1778, and historical notes.",
+    "latitude": 48.877,
+    "longitude": 2.3423,
+    "imageUrl": "/eop-images/sa_20251011T000100-source-0.jpg",
+    "detailUrl": "https://small.academy/eop/post/FRA/FR-PAR/20251011T000100"
   }
 ]

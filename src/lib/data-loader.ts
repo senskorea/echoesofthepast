@@ -1,5 +1,5 @@
 import { Postcard } from "../types/postcard";
-import mockData from "../data/mock-data.json";
+import bundledPostcards from "../../public/eop-postcards.json";
 import { parsePostcards, readDeletedPostcardIds, readStoredPostcards } from "./postcard-data";
 
 function resolvePublicAsset(path: string | undefined): string | undefined {
@@ -18,7 +18,7 @@ function resolvePostcardAssets(card: Postcard): Postcard {
 }
 
 export async function loadAllPostcards(): Promise<Postcard[]> {
-  let systemPostcards: Postcard[] = [];
+  let systemPostcards = parsePostcards(bundledPostcards);
   
   // 1. Load from public eop-postcards.json
   try {
@@ -31,22 +31,11 @@ export async function loadAllPostcards(): Promise<Postcard[]> {
     console.error("Failed to fetch eop-postcards.json", err);
   }
 
-  // 2. Load from mockData as fallback/base
-  const baseData = parsePostcards(mockData);
-  
-  // Merge system postcards into base (overwrite by ID)
-  const mergedSystem = [...baseData];
-  systemPostcards.forEach(sp => {
-    const idx = mergedSystem.findIndex(b => b.id === sp.id);
-    if (idx > -1) mergedSystem[idx] = sp;
-    else mergedSystem.push(sp);
-  });
-
-  // 3. Load from localStorage (user imports/edits)
+  // User imports and edits override the bundled catalogue.
   const userPostcards = readStoredPostcards();
 
   // 4. Final Merge: User data takes priority
-  const final = [...mergedSystem];
+  const final = [...systemPostcards];
   userPostcards.forEach(up => {
     const idx = final.findIndex(f => f.id === up.id);
     if (idx > -1) final[idx] = up;

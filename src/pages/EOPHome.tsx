@@ -197,9 +197,7 @@ const EOPHome = () => {
             <div className="eop-grid">
               {filteredPostcards.map((card) => {
                 const img = card.imageUrl || card.image_url || "";
-                const href = card.detailUrl && card.detailUrl !== "#"
-                  ? card.detailUrl
-                  : `/postcards/${card.id}`;
+                const href = `/postcards/${card.id}`;
                 return (
                   <Link to={href} key={card.id} className="eop-card">
                     <div className="eop-card-img-wrap">

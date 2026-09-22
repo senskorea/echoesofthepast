@@ -9,7 +9,7 @@ import {
   sanitizeExternalUrl,
   setPostcardDeleted,
 } from "./postcard-data";
-import mockData from "../data/mock-data.json";
+import mockData from "../../public/eop-postcards.json";
 
 class MemoryStorage implements Storage {
   private values = new Map<string, string>();
@@ -27,7 +27,7 @@ beforeEach(() => {
 
 describe("postcard persistence", () => {
   it("rejects invalid coordinates and accepts the bundled catalogue", () => {
-    expect(parsePostcards(mockData)).toHaveLength(4);
+    expect(parsePostcards(mockData)).toHaveLength(32);
     expect(() => parsePostcards({ id: "bad", title: "Bad", latitude: 91, longitude: 0 })).toThrow();
     expect(() => parsePostcards({ id: "bad", title: "Bad", latitude: 0, longitude: 0, imageUrl: "javascript:alert(1)" })).toThrow();
   });

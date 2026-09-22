@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loadAllPostcards } from "./data-loader";
-import mockData from "../data/mock-data.json";
+import mockData from "../../public/eop-postcards.json";
 import { DELETED_POSTCARDS_STORAGE_KEY, POSTCARDS_STORAGE_KEY } from "./postcard-data";
 
 class MemoryStorage implements Storage {
@@ -16,7 +16,7 @@ class MemoryStorage implements Storage {
 beforeEach(() => {
   vi.unstubAllEnvs();
   vi.stubGlobal("localStorage", new MemoryStorage());
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => [] }));
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, json: async () => mockData }));
 });
 
 describe("catalogue loading", () => {
@@ -35,6 +35,19 @@ describe("catalogue loading", () => {
     localStorage.setItem(DELETED_POSTCARDS_STORAGE_KEY, JSON.stringify([deletedId]));
     const cards = await loadAllPostcards();
     expect(cards.some((card) => card.id === deletedId)).toBe(false);
+  });
+
+  it("uses the same catalogue when the network fails", async () => {
+    vi.mocked(fetch).mockRejectedValue(new Error("Offline"));
+    expect((await loadAllPostcards()).map(card => card.id)).toEqual(mockData.map(card => card.id));
+  });
+
+  it("replaces samples while preserving locally imported stories", async () => {
+    const local = { ...mockData[0], id: "my-own-story", title: "My own story" };
+    localStorage.setItem(POSTCARDS_STORAGE_KEY, JSON.stringify([local]));
+    vi.mocked(fetch).mockResolvedValue({ ok: true, json: async () => [mockData[1]] } as Response);
+    const cards = await loadAllPostcards();
+    expect(cards.map(card => card.id)).toEqual([mockData[1].id, local.id]);
   });
 
   it("loads public data from the configured base path", async () => {
