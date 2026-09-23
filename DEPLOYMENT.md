@@ -39,6 +39,8 @@ For a bounded smoke test, enable only the necessary action limits and set the se
 
 Set repository Actions secrets `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`. These values are public in the built site, even though GitHub stores them as secrets.
 
+For optional visitor analytics, create the organisation's GoatCounter site and set the repository variable `VITE_GOATCOUNTER_ENDPOINT` to its public endpoint, for example `https://echoes-of-the-past.goatcounter.com/count`. Do not store an analytics API token in GitHub or the website.
+
 Set repository variables `VITE_AI_PROVIDER=gemini` (or `openai`) and `VITE_CENTRAL_SERVICES_ENABLED=true` only after hosted checks pass. Narration needs OpenAI and video needs Gemini regardless of this default. Merge the reviewed migration into main; the Pages workflow checks and deploys it. Verify direct routes, clean-browser anonymous use, English/Romanian/French errors and existing archives on the deployed URL.
 
 For an incident, set the backend `GENERATION_ENABLED=false` to block new generation/uploads immediately. Existing video polling remains available to recover already-started work. Disable action rows as needed. Rebuild with the frontend flag false. Preserve reservations and existing media. Roll back frontend changes only while paid endpoints remain disabled; never restore the old permissive handlers. For complete function shutdown, disable access to the gateway at the platform layer as well.

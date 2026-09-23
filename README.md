@@ -36,9 +36,14 @@ Set these in the ignored root `.env`, then restart Vite:
 | `VITE_CENTRAL_SERVICES_ENABLED` | `false` until hosted service checks pass. |
 | `VITE_IMAGE_ENABLED`, `VITE_VIDEO_ENABLED`, `VITE_NARRATION_ENABLED`, `VITE_OPENAI_ENABLED` | Enable only verified, funded media/providers; default false. |
 | `VITE_AI_PROVIDER` | `gemini` by default, or `openai`. |
+| `VITE_GOATCOUNTER_ENDPOINT` | Optional public GoatCounter endpoint, such as `https://echoes-of-the-past.goatcounter.com/count`. |
 
 
 **Every `VITE_` value is public in the website bundle.** Gemini, OpenAI and service-role secrets belong only in the backend. Old browser API settings are ignored. Narration uses OpenAI; video uses Gemini, regardless of the selected default provider.
+
+### Optional privacy-friendly analytics
+
+The public website can use [GoatCounter](https://www.goatcounter.com/), a lightweight privacy-friendly analytics service. Create the organisation's GoatCounter site, then add its public `/count` endpoint as the GitHub repository variable `VITE_GOATCOUNTER_ENDPOINT`. The application tracks page views across its single-page routes, including postcards and lessons. No analytics code loads when this value is blank; never add a GoatCounter API token to the frontend or repository variables.
 
 ## Your work
 

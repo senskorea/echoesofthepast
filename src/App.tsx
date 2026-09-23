@@ -11,6 +11,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import LearnHub from "./pages/LearnHub";
 import SmartTutor from "./components/SmartTutor";
+import GoatCounterAnalytics from "./components/GoatCounterAnalytics";
 import { LanguageProvider } from "./lib/i18n";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter basename={import.meta.env.BASE_URL}>
+            <GoatCounterAnalytics />
             <Routes>
               <Route path="/" element={<EOPHome />} />
               <Route path="/postcards/:id" element={<PostcardDetail />} />
