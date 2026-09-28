@@ -42,7 +42,7 @@ export default function Settings() {
   };
   return <div className="eop-root min-h-screen">
     <SEO title="Your work & backups - GeoStories" description="Save and restore your GeoStories postcard archive." />
-    <header className="eop-nav"><Link to="/" className="eop-logo">Echoes of the Past</Link><nav className="eop-nav-links"><LanguageSwitcher/><Link to="/learn" className="eop-nav-link">{t('nav_learn')}</Link><Link to="/" className="eop-nav-link">{t('nav_archive')}</Link></nav></header>
+    <header className="eop-nav"><Link to="/" className="eop-logo">Echoes of the Past</Link><nav className="eop-nav-links"><LanguageSwitcher/><Link to="/about" className="eop-nav-link">{t('nav_project')}</Link><Link to="/learn" className="eop-nav-link">{t('nav_learn')}</Link><Link to="/" className="eop-nav-link">{t('nav_archive')}</Link></nav></header>
     <main className="mx-auto max-w-3xl px-6 py-10 space-y-6">
       <h1 className="text-3xl font-semibold">Your work & backups</h1>
       <p>Online services are managed by the platform. You do not need API keys or a cloud account.</p>

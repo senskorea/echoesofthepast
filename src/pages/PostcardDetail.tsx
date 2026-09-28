@@ -582,6 +582,7 @@ const PostcardDetail = () => {
         </button>
         <nav className="eop-nav-links">
           <LanguageSwitcher />
+          <Link to="/about" className="eop-nav-link">{t("nav_project")}</Link>
           <Link to="/learn" className="eop-nav-link">{t("nav_learn")}</Link>
           <button onClick={() => navigate("/")} className="eop-nav-link" style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <ArrowLeft style={{ width: 14, height: 14 }} /> {t("nav_archive")}

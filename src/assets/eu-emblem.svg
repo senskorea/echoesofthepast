@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120" viewBox="0 0 180 120" role="img" aria-labelledby="title">
+  <title id="title">European Union emblem</title>
+  <rect width="180" height="120" fill="#003399"/>
+  <defs><path id="star" d="M0-7.6 1.72-2.37 7.23-2.35 2.77.9 4.47 6.13 0 2.9-4.47 6.13-2.77.9-7.23-2.35-1.72-2.37Z"/></defs>
+  <g fill="#FFCC00">
+    <use href="#star" transform="translate(90 23)"/><use href="#star" transform="translate(111 28.6)"/><use href="#star" transform="translate(126.4 44)"/><use href="#star" transform="translate(132 65)"/><use href="#star" transform="translate(126.4 86)"/><use href="#star" transform="translate(111 101.4)"/><use href="#star" transform="translate(90 107)"/><use href="#star" transform="translate(69 101.4)"/><use href="#star" transform="translate(53.6 86)"/><use href="#star" transform="translate(48 65)"/><use href="#star" transform="translate(53.6 44)"/><use href="#star" transform="translate(69 28.6)"/>
+  </g>
+</svg>

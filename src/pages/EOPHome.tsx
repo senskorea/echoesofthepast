@@ -106,6 +106,7 @@ const EOPHome = () => {
           <LanguageSwitcher />
           <Link to="/settings" className="eop-nav-link">{t("nav_settings")}</Link>
           <Link to="/learn" className="eop-nav-link">{t("nav_learn")}</Link>
+          <Link to="/about" className="eop-nav-link">{t("nav_project")}</Link>
           <ImportDialog onImport={handleImportOrUpdate} />
         </nav>
       </header>
@@ -264,16 +265,6 @@ const EOPHome = () => {
         </section>
       )}
 
-      {/* ── FOOTER ── */}
-      <footer className="eop-footer">
-        <div className="eop-footer-inner">
-          <span>© {new Date().getFullYear()} Small Academy — Erasmus+ Programme</span>
-          <div className="eop-footer-links">
-            <a href="https://github.com/SmallAcademy" target="_blank" rel="noreferrer">GitHub</a>
-            <Link to="/settings">Settings</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

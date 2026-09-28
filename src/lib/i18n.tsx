@@ -27,6 +27,11 @@ export const translations: Translations = {
     ro: "Setări",
     fr: "Paramètres"
   },
+  nav_project: {
+    en: "Project",
+    ro: "Proiect",
+    fr: "Projet"
+  },
   nav_add_story: {
     en: "Add Story",
     ro: "Adaugă Poveste",

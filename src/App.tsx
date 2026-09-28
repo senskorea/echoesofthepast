@@ -10,8 +10,10 @@ import PostcardDetail from "./pages/PostcardDetail";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import LearnHub from "./pages/LearnHub";
+import AboutProject from "./pages/AboutProject";
 import SmartTutor from "./components/SmartTutor";
 import GoatCounterAnalytics from "./components/GoatCounterAnalytics";
+import ErasmusFooter from "./components/ErasmusFooter";
 import { LanguageProvider } from "./lib/i18n";
 
 const queryClient = new QueryClient();
@@ -30,10 +32,12 @@ const App = () => (
               <Route path="/postcards/:id" element={<PostcardDetail />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/learn" element={<LearnHub />} />
+              <Route path="/about" element={<AboutProject />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
             <SmartTutor />
+            <ErasmusFooter />
           </BrowserRouter>
         </TooltipProvider>
       </LanguageProvider>
