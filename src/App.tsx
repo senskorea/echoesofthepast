@@ -11,6 +11,10 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import LearnHub from "./pages/LearnHub";
 import AboutProject from "./pages/AboutProject";
+import Privacy from "./pages/Privacy";
+import Accessibility from "./pages/Accessibility";
+import Credits from "./pages/Credits";
+import ResponsibleUse from "./pages/ResponsibleUse";
 import SmartTutor from "./components/SmartTutor";
 import GoatCounterAnalytics from "./components/GoatCounterAnalytics";
 import ErasmusFooter from "./components/ErasmusFooter";
@@ -33,6 +37,10 @@ const App = () => (
               <Route path="/settings" element={<Settings />} />
               <Route path="/learn" element={<LearnHub />} />
               <Route path="/about" element={<AboutProject />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/accessibility" element={<Accessibility />} />
+              <Route path="/credits" element={<Credits />} />
+              <Route path="/responsible-use" element={<ResponsibleUse />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -102,7 +102,7 @@ const EOPHome = () => {
           <span className="eop-logo-dot" />
           <span>Echoes of the Past</span>
         </Link>
-        <nav className="eop-nav-links">
+        <nav className="eop-nav-links" aria-label="Primary navigation">
           <LanguageSwitcher />
           <Link to="/settings" className="eop-nav-link">{t("nav_settings")}</Link>
           <Link to="/learn" className="eop-nav-link">{t("nav_learn")}</Link>
@@ -125,6 +125,7 @@ const EOPHome = () => {
       </section>
 
       {/* ── TOGGLE BAR ── */}
+      <main id="main-content">
       <div className="eop-toggle-bar">
         <div className="eop-toggle-left">
           <h2 className="eop-section-title">Geostories</h2>
@@ -137,12 +138,14 @@ const EOPHome = () => {
         <div className="eop-toggle-search">
           <div className="eop-toggle-search-wrapper">
             <input
+              id="archive-search"
               type="text"
               className="eop-toggle-search-input"
               placeholder={t("home_search_placeholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <label className="sr-only" htmlFor="archive-search">Search the postcard archive</label>
             <Search className="eop-toggle-search-icon" />
             {searchQuery && (
               <button
@@ -159,12 +162,14 @@ const EOPHome = () => {
           <button
             className={`eop-toggle ${activeView === "gallery" ? "active" : ""}`}
             onClick={() => setActiveView("gallery")}
+            aria-pressed={activeView === "gallery"}
           >
             Gallery
           </button>
           <button
             className={`eop-toggle ${activeView === "map" ? "active" : ""}`}
             onClick={() => setActiveView("map")}
+            aria-pressed={activeView === "map"}
           >
             Map
           </button>
@@ -200,7 +205,8 @@ const EOPHome = () => {
                 const img = card.imageUrl || card.image_url || "";
                 const href = `/postcards/${card.id}`;
                 return (
-                  <Link to={href} key={card.id} className="eop-card">
+                  <article key={card.id} className="eop-card">
+                    <Link to={href} className="eop-card-main" aria-label={`Open postcard: ${card.title}`}>
                     <div className="eop-card-img-wrap">
                       {img ? (
                         <img src={img} alt={card.title} className="eop-card-img" />
@@ -221,6 +227,7 @@ const EOPHome = () => {
                     </div>
                     <div className="eop-card-arrow">→</div>
                     
+                    </Link>
                     <div className="eop-card-actions">
                       <ImportDialog 
                         onImport={handleImportOrUpdate} 
@@ -230,6 +237,7 @@ const EOPHome = () => {
                             onClick={(e) => e.stopPropagation()} // Prevent card navigation
                             className="eop-card-action-btn"
                             title="Edit"
+                            aria-label={`Edit ${card.title}`}
                           >
                             <Edit style={{ width: 14, height: 14 }} />
                           </button>
@@ -239,6 +247,7 @@ const EOPHome = () => {
                         onClick={(e) => handleExportCard(e, card)}
                         className="eop-card-action-btn"
                         title="Export JSON"
+                        aria-label={`Export ${card.title} as JSON`}
                       >
                         <Download style={{ width: 14, height: 14 }} />
                       </button>
@@ -246,11 +255,12 @@ const EOPHome = () => {
                         onClick={(e) => handleDelete(e, card.id)}
                         className="eop-card-action-btn delete-btn"
                         title="Delete"
+                        aria-label={`Delete ${card.title}`}
                       >
                         <Trash2 style={{ width: 14, height: 14 }} />
                       </button>
                     </div>
-                  </Link>
+                  </article>
                 );
               })}
             </div>
@@ -264,6 +274,7 @@ const EOPHome = () => {
           <MapView postcards={filteredPostcards} />
         </section>
       )}
+      </main>
 
     </div>
   );

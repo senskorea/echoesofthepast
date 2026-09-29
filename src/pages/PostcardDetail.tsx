@@ -704,7 +704,8 @@ const PostcardDetail = () => {
                         </button>
                       </div>
                       
-                      {!isCollapsed && (
+                      {!isCollapsed && (<>
+                        <div className="ai-disclosure">AI-generated or AI-assisted output — review before sharing.</div>
                         <div className="pd-output-content" style={{ marginTop: 12 }}>
                           {asset.type === "image" ? (
                             <div className="pd-output-image">
@@ -724,7 +725,7 @@ const PostcardDetail = () => {
                             </div>
                           )}
                         </div>
-                      )}
+                      </>)}
                     </div>
                   );
                 })}
