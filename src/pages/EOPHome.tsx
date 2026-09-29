@@ -12,6 +12,7 @@ import { POSTCARDS_STORAGE_KEY, setPostcardDeleted } from "@/lib/postcard-data";
 import { useLanguage } from "../lib/i18n";
 import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import heroImg from "@/assets/eop_hero_premium.png";
+import WelcomeGuide from "@/components/WelcomeGuide";
 
 type View = "gallery" | "map";
 
@@ -21,6 +22,9 @@ const EOPHome = () => {
   const [postcards, setPostcards] = useState<Postcard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [welcomeGuideOpen, setWelcomeGuideOpen] = useState(() => {
+    try { return localStorage.getItem("eop-welcome-guide-dismissed") !== "true"; } catch { return true; }
+  });
 
   const filteredPostcards = postcards.filter((card) => {
     if (!searchQuery.trim()) return true;
@@ -118,6 +122,12 @@ const EOPHome = () => {
           <p className="eop-hero-sub">
             {t("home_hero_sub")}
           </p>
+          <WelcomeGuide
+            open={welcomeGuideOpen}
+            onDismiss={() => setWelcomeGuideOpen(false)}
+            onRestart={() => setWelcomeGuideOpen(true)}
+            onOpenMap={() => setActiveView("map")}
+          />
         </div>
         <div className="eop-hero-image">
           <img src={heroImg} alt="Echoes of the Past" />
